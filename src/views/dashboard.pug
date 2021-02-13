@@ -9,7 +9,7 @@ html(lang='en')
 
     each room in rooms
       div
-        h2 #{room.name}
+        h2.room(data-colour=room.colour) #{room.name}
         input(class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
         br
         each scene in room.scenes

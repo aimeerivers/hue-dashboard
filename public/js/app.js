@@ -1,4 +1,5 @@
 let checkboxes = document.getElementsByClassName('on-off');
+let rooms = document.getElementsByClassName('room');
 let scenes = document.getElementsByClassName('scene');
 
 var onOff = function() {
@@ -21,6 +22,10 @@ var setScene = function() {
 
 for (var i = 0; i < checkboxes.length; i++) {
   checkboxes[i].addEventListener('change', onOff, false);
+}
+
+for (var i = 0; i < rooms.length; i++) {
+  rooms[i].style.backgroundColor = rooms[i].getAttribute("data-colour");
 }
 
 for (var i = 0; i < scenes.length; i++) {

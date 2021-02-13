@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "express": "latest",
-    "cors": "latest"
+    "cors": "latest",
+    "pug": "latest"
   }
 }

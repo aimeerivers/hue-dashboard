@@ -1,0 +1,15 @@
+img.scene {
+  width: 40px;
+  height: 40px;
+  margin: 3px;
+  border: 2px solid #ddd;
+  border-radius: 30%;
+  padding: 2px;
+  box-shadow: 1px 1px 8px #bbb;
+  cursor: pointer;
+}
+
+img.scene:hover {
+  margin-bottom: 2px;
+  box-shadow: 1px 1px 8px #888;
+}

@@ -1,0 +1,19 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    link(rel="stylesheet" href="/css/styles.css")
+    title #{title}
+  body
+    h1#myHeading #{title}
+
+    each room in rooms
+      div
+        h2 #{room.name}
+        input(class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
+        br
+        each scene in room.scenes
+          img.scene(src=scene.imageUrl title=scene.name data-colour=scene.colour data-room-id=room.id data-scene-id=scene.id)
+
+
+  script(src='/js/app.js')

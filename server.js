@@ -77,13 +77,15 @@ app.get('/dashboard', (req, res) => {
         let scene = scenes[sceneId];
         if(scene.type == 'GroupScene' && scene.group && scene.image && COLOURS[scene.image]) {
           let room = rooms.find(e => e.id == scene.group);
-          room.scenes.push({
-            id: sceneId,
-            name: scene.name,
-            image: scene.image,
-            imageUrl: `/images/scenes/${scene.image}.png`,
-            colour: COLOURS[scene.image]
-          })
+          if (room) {
+            room.scenes.push({
+              id: sceneId,
+              name: scene.name,
+              image: scene.image,
+              imageUrl: `/images/scenes/${scene.image}.png`,
+              colour: COLOURS[scene.image]
+            })
+          }
         }
       }
 
@@ -125,8 +127,8 @@ app.put('/clock', (req, res) => {
   // if(req.body.hours) { updateLight(13, req.body.hours.rgb); }
   // if(req.body.minutes) { updateLight(12, req.body.minutes.rgb); }
   // if(req.body.seconds) { updateLight(11, req.body.seconds.rgb); }
-  
-  
+
+
   res.sendStatus(200);
 });
 
@@ -143,7 +145,7 @@ function hueRequest(method, path, body, callback) {
     response.on('data', function(chunk) {
       str += chunk;
     });
-  
+
     response.on('end', function() {
       callback(str);
     });
@@ -179,7 +181,7 @@ function rgbToXy(red, green, blue) {
     blue = Math.pow((blue + 0.055) / (1.0 + 0.055), 2.4);
   }
   else blue = (blue / 12.92);
-  
+
   var X = red * 0.664511 + green * 0.154324 + blue * 0.162028;
   var Y = red * 0.283881 + green * 0.668433 + blue * 0.047685;
   var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;

@@ -88,7 +88,7 @@ app.get('/dashboard', (req, res) => {
       }
 
       res.render('dashboard', {
-        title: 'Dashboard',
+        title: 'Hue Dashboard',
         rooms: rooms
       });
 

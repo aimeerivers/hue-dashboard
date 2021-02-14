@@ -46,10 +46,9 @@ app.get('/', (req, res) => {
 });
 
 app.get('/dashboard', (req, res) => {
-  let rooms = [];
+  const promiseRooms = promiseGetGroups().then(groups => {
+    let rooms = [];
 
-  hueRequest('GET', '/groups', {}, function(groupsResponse) {
-    let groups = JSON.parse(groupsResponse);
     for(let groupId in groups) {
       let group = groups[groupId];
       if(group.type == 'Room' || group.type == 'Zone') {
@@ -71,29 +70,29 @@ app.get('/dashboard', (req, res) => {
       }
     }
 
-    hueRequest('GET', '/scenes', {}, function(scenesResponse) {
-      let scenes = JSON.parse(scenesResponse);
-      for(let sceneId in scenes) {
-        let scene = scenes[sceneId];
-        if(scene.type == 'GroupScene' && scene.group) {
-          let room = rooms.find(e => e.id == scene.group);
-          if (room) {
-            room.scenes.push({
-              id: sceneId,
-              name: scene.name,
-              image: scene.image,
-              imageUrl: `/images/scenes/${scene.image}.png`,
-              colour: COLOURS[scene.image]
-            })
-          }
+    return rooms;
+  });
+
+  Promise.all([promiseRooms, promiseGetScenes()]).then(([rooms, scenes]) => {
+    for (let sceneId in scenes) {
+      let scene = scenes[sceneId];
+      if (scene.type == 'GroupScene' && scene.group) {
+        let room = rooms.find(e => e.id == scene.group);
+        if (room) {
+          room.scenes.push({
+            id: sceneId,
+            name: scene.name,
+            image: scene.image,
+            imageUrl: `/images/scenes/${scene.image}.png`,
+            colour: COLOURS[scene.image]
+          })
         }
       }
+    }
 
-      res.render('dashboard', {
-        title: 'Hue Dashboard',
-        rooms: rooms
-      });
-
+    res.render('dashboard', {
+      title: 'Hue Dashboard',
+      rooms: rooms
     });
   });
 });
@@ -112,6 +111,15 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) => {
   });
 });
 
+app.post('/light/:lightId/random', (req, res) => {
+  const lightId = parseInt(req.params.lightId);
+  const r = Math.floor(Math.random() * 255);
+  const g = Math.floor(Math.random() * 255);
+  const b = Math.floor(Math.random() * 255);
+  updateLight(lightId, `rgb(${r}, ${g}, ${b})`)
+      .then(() => res.sendStatus(200));
+});
+
 app.put('/clock', (req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }
   // if(req.body.months) { updateLight(12, req.body.months.rgb); }
@@ -128,9 +136,22 @@ app.put('/clock', (req, res) => {
   // if(req.body.minutes) { updateLight(12, req.body.minutes.rgb); }
   // if(req.body.seconds) { updateLight(11, req.body.seconds.rgb); }
 
-
   res.sendStatus(200);
 });
+
+const promiseHueRequest = (method, path, body) => new Promise(
+  (resolve, reject) => {
+    hueRequest(method, path, body, resolve)
+  }
+);
+
+const promiseGetGroups = () =>
+  promiseHueRequest('GET', '/groups', {})
+    .then(body => JSON.parse(body));
+
+const promiseGetScenes = () =>
+  promiseHueRequest('GET', '/scenes', {})
+    .then(body => JSON.parse(body));
 
 function hueRequest(method, path, body, callback) {
   var options = {
@@ -161,9 +182,7 @@ function updateLight(id, value) {
   let blue = parse[3];
   let xy = rgbToXy(red, green, blue);
 
-  hueRequest('PUT', `/lights/${id}/state`, {"xy": xy}, function(str) {
-    console.log(str);
-  });
+  return promiseHueRequest('PUT', `/lights/${id}/state`, {"xy": xy});
 }
 
 function rgbToXy(red, green, blue) {

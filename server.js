@@ -97,19 +97,21 @@ app.get('/dashboard', (req, res) => {
   });
 });
 
-app.put('/room/:roomId/on/:state', (req, res) => {
-  hueRequest('PUT', `/groups/${req.params.roomId}/action`, {"on": req.params.state == 'true'}, function(str) {
-    console.log(str);
-    res.sendStatus(200);
-  });
-});
+app.put('/room/:roomId/on/:state', (req, res) =>
+  promiseHueRequest('PUT', `/groups/${req.params.roomId}/action`, {"on": req.params.state == 'true'})
+    .then(str => {
+      console.log(str);
+      res.sendStatus(200);
+    })
+);
 
-app.put('/room/:roomId/scene/:sceneId', (req, res) => {
-  hueRequest('PUT', `/groups/${req.params.roomId}/action`, {"scene": req.params.sceneId}, function(str) {
-    console.log(str);
-    res.sendStatus(200);
-  });
-});
+app.put('/room/:roomId/scene/:sceneId', (req, res) =>
+  promiseHueRequest('PUT', `/groups/${req.params.roomId}/action`, {"scene": req.params.sceneId})
+    .then(str => {
+      console.log(str);
+      res.sendStatus(200);
+    })
+);
 
 app.post('/light/:lightId/random', (req, res) => {
   const lightId = parseInt(req.params.lightId);
@@ -139,12 +141,6 @@ app.put('/clock', (req, res) => {
   res.sendStatus(200);
 });
 
-const promiseHueRequest = (method, path, body) => new Promise(
-  (resolve, reject) => {
-    hueRequest(method, path, body, resolve)
-  }
-);
-
 const promiseGetGroups = () =>
   promiseHueRequest('GET', '/groups', {})
     .then(body => JSON.parse(body));
@@ -153,7 +149,7 @@ const promiseGetScenes = () =>
   promiseHueRequest('GET', '/scenes', {})
     .then(body => JSON.parse(body));
 
-function hueRequest(method, path, body, callback) {
+const promiseHueRequest = (method, path, body) => new Promise((resolve, _reject) => {
   var options = {
     host: process.env.HUE_BRIDGE_IP_ADDRESS,
     path: `/api/${process.env.HUE_USERNAME}${path}`,
@@ -168,12 +164,13 @@ function hueRequest(method, path, body, callback) {
     });
 
     response.on('end', function() {
-      callback(str);
+      resolve(str);
     });
   });
+
   req.write(JSON.stringify(body));
   req.end();
-}
+});
 
 function updateLight(id, value) {
   let parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);

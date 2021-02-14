@@ -2,7 +2,7 @@
 
 ## Build Hue Dashboard
 
-    docker build -t hue .
+    docker build -t hue-dashboard .
 
 ## Find your Hue hub
 
@@ -21,7 +21,7 @@ See step 3 on https://developers.meethue.com/develop/get-started-2/
       -v $PWD/server.js:/usr/src/app/server.js \
       -e "HUE_BRIDGE_IP_ADDRESS=<ipaddress>" \
       -e "HUE_USERNAME=<username>" \
-      hue
+      hue-dashboard
 
 visit http://localhost:9000/
 

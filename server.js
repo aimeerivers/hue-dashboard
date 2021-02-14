@@ -111,11 +111,11 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) => {
 });
 
 app.put('/clock', (req, res) => {
-  if(req.body.years) { updateLight(13, req.body.years.rgb); }
-  if(req.body.months) { updateLight(12, req.body.months.rgb); }
-  if(req.body.days) { updateLight(11, req.body.days.rgb); }
-  if(req.body.hours) { updateLight(17, req.body.hours.rgb); }
-  if(req.body.minutes) { updateLight(15, req.body.minutes.rgb); }
+  // if(req.body.years) { updateLight(13, req.body.years.rgb); }
+  // if(req.body.months) { updateLight(12, req.body.months.rgb); }
+  // if(req.body.days) { updateLight(11, req.body.days.rgb); }
+  // if(req.body.hours) { updateLight(17, req.body.hours.rgb); }
+  // if(req.body.minutes) { updateLight(15, req.body.minutes.rgb); }
   // if(req.body.seconds) { updateLight(14, req.body.seconds.rgb); }
 
   // DEMO

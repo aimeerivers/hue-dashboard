@@ -1,5 +1,15 @@
 # Hue Dashboard
 
+## Build
+
+    docker build -t hue .
+
+## Find your Hue hub
+
+    https://discovery.meethue.com/
+
+## Run
+
     docker run -it --init \
       -p 9000:8080 \
       -v $PWD/src:/usr/src/app/src \

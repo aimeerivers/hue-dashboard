@@ -55,7 +55,7 @@ app.get('/dashboard', (req, res) => {
       if(group.type == 'Room' || group.type == 'Zone') {
         let colour = "";
         if(group.state.any_on) {
-          if(group.action.colormode == 'xy') {
+          if(group.action.xy && group.action.bri) {
             colour = xyBriToHex(group.action.xy[0], group.action.xy[1], group.action.bri);
           } else if(group.action.colormode == 'ct') {
             colour = ctToHex(group.action.ct);

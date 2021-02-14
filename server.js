@@ -75,7 +75,7 @@ app.get('/dashboard', (req, res) => {
       let scenes = JSON.parse(scenesResponse);
       for(let sceneId in scenes) {
         let scene = scenes[sceneId];
-        if(scene.type == 'GroupScene' && scene.group && scene.image && COLOURS[scene.image]) {
+        if(scene.type == 'GroupScene' && scene.group) {
           let room = rooms.find(e => e.id == scene.group);
           if (room) {
             room.scenes.push({

@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/dashboard', (req, res) => {
-  const promiseRooms = promiseGetGroups().then(groups => {
+  const promiseRooms = getGroups().then(groups => {
     let rooms = [];
 
     for(let groupId in groups) {
@@ -73,7 +73,7 @@ app.get('/dashboard', (req, res) => {
     return rooms;
   });
 
-  Promise.all([promiseRooms, promiseGetScenes()]).then(([rooms, scenes]) => {
+  Promise.all([promiseRooms, getScenes()]).then(([rooms, scenes]) => {
     for (let sceneId in scenes) {
       let scene = scenes[sceneId];
       if (scene.type == 'GroupScene' && scene.group) {
@@ -98,7 +98,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.put('/room/:roomId/on/:state', (req, res) =>
-  promiseHueRequest('PUT', `/groups/${req.params.roomId}/action`, {"on": req.params.state == 'true'})
+  hueRequest('PUT', `/groups/${req.params.roomId}/action`, {"on": req.params.state == 'true'})
     .then(str => {
       console.log(str);
       res.sendStatus(200);
@@ -106,7 +106,7 @@ app.put('/room/:roomId/on/:state', (req, res) =>
 );
 
 app.put('/room/:roomId/scene/:sceneId', (req, res) =>
-  promiseHueRequest('PUT', `/groups/${req.params.roomId}/action`, {"scene": req.params.sceneId})
+  hueRequest('PUT', `/groups/${req.params.roomId}/action`, {"scene": req.params.sceneId})
     .then(str => {
       console.log(str);
       res.sendStatus(200);
@@ -141,15 +141,15 @@ app.put('/clock', (req, res) => {
   res.sendStatus(200);
 });
 
-const promiseGetGroups = () =>
-  promiseHueRequest('GET', '/groups', {})
+const getGroups = () =>
+  hueRequest('GET', '/groups', {})
     .then(body => JSON.parse(body));
 
-const promiseGetScenes = () =>
-  promiseHueRequest('GET', '/scenes', {})
+const getScenes = () =>
+  hueRequest('GET', '/scenes', {})
     .then(body => JSON.parse(body));
 
-const promiseHueRequest = (method, path, body) => new Promise((resolve, _reject) => {
+const hueRequest = (method, path, body) => new Promise((resolve, _reject) => {
   var options = {
     host: process.env.HUE_BRIDGE_IP_ADDRESS,
     path: `/api/${process.env.HUE_USERNAME}${path}`,
@@ -179,7 +179,7 @@ function updateLight(id, value) {
   let blue = parse[3];
   let xy = rgbToXy(red, green, blue);
 
-  return promiseHueRequest('PUT', `/lights/${id}/state`, {"xy": xy});
+  return hueRequest('PUT', `/lights/${id}/state`, {"xy": xy});
 }
 
 function rgbToXy(red, green, blue) {

@@ -6,7 +6,7 @@
 
 ## Find your Hue hub
 
-    https://discovery.meethue.com/
+Find an IP address here https://discovery.meethue.com/
 
 ## Authenticate
 

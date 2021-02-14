@@ -122,6 +122,27 @@ app.post('/light/:lightId/random', (req, res) => {
       .then(() => res.sendStatus(200));
 });
 
+app.post('/group/:groupId/cycle', (req, res) =>
+  Promise.all([
+    hueRequest('GET', `/groups/${req.params.groupId}`, {}),
+    getLights(),
+  ]).then(([group, allLights]) => {
+    const colourLightIdsInThisGroup = group.lights
+      .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
+      .sort();
+
+    return Promise.all(
+      colourLightIdsInThisGroup.map((lightId, index) => {
+        const nextLightId = colourLightIdsInThisGroup[(index + 1) % colourLightIdsInThisGroup.length];
+        const xy = allLights[nextLightId].state.xy;
+        hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy});
+      })
+    );
+  }).then(() => {
+    res.sendStatus(200);
+  })
+);
+
 app.put('/clock', (req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }
   // if(req.body.months) { updateLight(12, req.body.months.rgb); }
@@ -142,14 +163,15 @@ app.put('/clock', (req, res) => {
 });
 
 const getGroups = () =>
-  hueRequest('GET', '/groups', {})
-    .then(body => JSON.parse(body));
+  hueRequest('GET', '/groups', {});
 
 const getScenes = () =>
-  hueRequest('GET', '/scenes', {})
-    .then(body => JSON.parse(body));
+  hueRequest('GET', '/scenes', {});
 
-const hueRequest = (method, path, body) => new Promise((resolve, _reject) => {
+const getLights = () =>
+  hueRequest('GET', '/lights', {});
+
+const hueRequest = (method, path, body) => new Promise((resolve, reject) => {
   var options = {
     host: process.env.HUE_BRIDGE_IP_ADDRESS,
     path: `/api/${process.env.HUE_USERNAME}${path}`,
@@ -158,13 +180,19 @@ const hueRequest = (method, path, body) => new Promise((resolve, _reject) => {
   };
 
   var req = http.request(options, function(response) {
+    console.log(`${method} ${path} => ${response.statusCode} ${response.statusMessage}`);
+
+    if (response.statusCode !== 200) {
+      reject(`HTTP response status is ${response.statusCode} ${response.statusMessage}`);
+    }
+
     var str = ''
     response.on('data', function(chunk) {
       str += chunk;
     });
 
     response.on('end', function() {
-      resolve(str);
+      resolve(JSON.parse(str));
     });
   });
 

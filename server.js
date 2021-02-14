@@ -122,11 +122,14 @@ app.post('/light/:lightId/random', (req, res) => {
       .then(() => res.sendStatus(200));
 });
 
-app.post('/group/:groupId/cycle', (req, res) =>
+app.post('/group/:groupId/cycle/:time?', (req, res) =>
   Promise.all([
     hueRequest('GET', `/groups/${req.params.groupId}`, {}),
     getLights(),
   ]).then(([group, allLights]) => {
+    let transitionTime;
+    if(req.params.time) transitionTime = parseInt(req.params.time);
+    if(transitionTime === NaN) transitionTime = 4;
     const colourLightIdsInThisGroup = group.lights
       .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
       .sort();
@@ -135,7 +138,7 @@ app.post('/group/:groupId/cycle', (req, res) =>
       colourLightIdsInThisGroup.map((lightId, index) => {
         const nextLightId = colourLightIdsInThisGroup[(index + 1) % colourLightIdsInThisGroup.length];
         const xy = allLights[nextLightId].state.xy;
-        hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy});
+        hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime});
       })
     );
   }).then(() => {

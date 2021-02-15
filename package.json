@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Hue controller webapp",
   "author": "Aimee Rivers <aimee@aimeerivers.com>",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "express": "latest",

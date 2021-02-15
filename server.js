@@ -113,13 +113,19 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) =>
     })
 );
 
-app.post('/light/:lightId/random', (req, res) => {
+app.post('/light/:lightId/random/:time?', (req, res) => {
+  let transitionTime;
+  if (req.params.time) transitionTime = parseInt(req.params.time);
+  if (transitionTime === NaN) transitionTime = 4;
+
   const lightId = parseInt(req.params.lightId);
   const r = Math.floor(Math.random() * 255);
   const g = Math.floor(Math.random() * 255);
   const b = Math.floor(Math.random() * 255);
-  updateLight(lightId, `rgb(${r}, ${g}, ${b})`)
-      .then(() => res.sendStatus(200));
+  const xy = rgbToXy(r, g, b);
+
+  hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+    .then(() => res.sendStatus(200));
 });
 
 app.post('/group/:groupId/cycle/:time?', (req, res) =>

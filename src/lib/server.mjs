@@ -2,8 +2,10 @@
 
 import express from 'express';
 import cors from 'cors';
-import http from 'http';
 import pug from 'pug';
+
+import * as Conversions from './conversions.mjs';
+import * as HueAPI from './hue_api.mjs';
 
 const COLOURS = {
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715': '#fbbbcd', // Blomstrende forår
@@ -42,7 +44,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/dashboard', (req, res) => {
-  const promiseRooms = getGroups().then(groups => {
+  const promiseRooms = HueAPI.getGroups().then(groups => {
     let rooms = [];
 
     for(let groupId in groups) {
@@ -51,9 +53,9 @@ app.get('/dashboard', (req, res) => {
         let colour = "";
         if(group.state.any_on) {
           if(group.action.xy && group.action.bri) {
-            colour = xyBriToHex(group.action.xy[0], group.action.xy[1], group.action.bri);
+            colour = Conversions.xyBriToHex(group.action.xy[0], group.action.xy[1], group.action.bri);
           } else if(group.action.colormode == 'ct') {
-            colour = ctToHex(group.action.ct);
+            colour = Conversions.ctToHex(group.action.ct);
           }
         }
         rooms.push({
@@ -69,7 +71,7 @@ app.get('/dashboard', (req, res) => {
     return rooms;
   });
 
-  Promise.all([promiseRooms, getScenes()]).then(([rooms, scenes]) => {
+  Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
     for (let sceneId in scenes) {
       let scene = scenes[sceneId];
       if (scene.type == 'GroupScene' && scene.group) {
@@ -94,7 +96,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 app.put('/room/:roomId/on/:state', (req, res) =>
-  hueRequest('PUT', `/groups/${req.params.roomId}/action`, {"on": req.params.state == 'true'})
+  HueAPI.request('PUT', `/groups/${req.params.roomId}/action`, {"on": req.params.state == 'true'})
     .then(str => {
       console.log(str);
       res.sendStatus(200);
@@ -102,7 +104,7 @@ app.put('/room/:roomId/on/:state', (req, res) =>
 );
 
 app.put('/room/:roomId/scene/:sceneId', (req, res) =>
-  hueRequest('PUT', `/groups/${req.params.roomId}/action`, {"scene": req.params.sceneId})
+  HueAPI.request('PUT', `/groups/${req.params.roomId}/action`, {"scene": req.params.sceneId})
     .then(str => {
       console.log(str);
       res.sendStatus(200);
@@ -116,13 +118,13 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
 
   const lightId = parseInt(req.params.lightId);
 
-  const xy = rgbToXy(
+  const xy = Conversions.rgbToXy(
     parseInt(req.params.r),
     parseInt(req.params.g),
     parseInt(req.params.b),
   );
 
-  hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
     .then(() => res.sendStatus(200));
 });
 
@@ -135,16 +137,16 @@ app.post('/light/:lightId/random/:time?', (req, res) => {
   const r = Math.floor(Math.random() * 255);
   const g = Math.floor(Math.random() * 255);
   const b = Math.floor(Math.random() * 255);
-  const xy = rgbToXy(r, g, b);
+  const xy = Conversions.rgbToXy(r, g, b);
 
-  hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
     .then(() => res.sendStatus(200));
 });
 
 app.post('/group/:groupId/cycle/:time?', (req, res) =>
   Promise.all([
-    hueRequest('GET', `/groups/${req.params.groupId}`, {}),
-    getLights(),
+    HueAPI.request('GET', `/groups/${req.params.groupId}`, {}),
+    HueAPI.getLights(),
   ]).then(([group, allLights]) => {
     let transitionTime;
     if(req.params.time) transitionTime = parseInt(req.params.time);
@@ -157,7 +159,7 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
       colourLightIdsInThisGroup.map((lightId, index) => {
         const nextLightId = colourLightIdsInThisGroup[(index + 1) % colourLightIdsInThisGroup.length];
         const xy = allLights[nextLightId].state.xy;
-        hueRequest('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime});
+        HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime});
       })
     );
   }).then(() => {
@@ -184,160 +186,14 @@ app.put('/clock', (req, res) => {
   res.sendStatus(200);
 });
 
-const getGroups = () =>
-  hueRequest('GET', '/groups', {});
-
-const getScenes = () =>
-  hueRequest('GET', '/scenes', {});
-
-const getLights = () =>
-  hueRequest('GET', '/lights', {});
-
-const hueRequest = (method, path, body) => new Promise((resolve, reject) => {
-  var options = {
-    host: process.env.HUE_BRIDGE_IP_ADDRESS,
-    path: `/api/${process.env.HUE_USERNAME}${path}`,
-    port: '80',
-    method: method.toUpperCase()
-  };
-
-  var req = http.request(options, function(response) {
-    console.log(`${method} ${path} => ${response.statusCode} ${response.statusMessage}`);
-
-    if (response.statusCode !== 200) {
-      reject(`HTTP response status is ${response.statusCode} ${response.statusMessage}`);
-    }
-
-    var str = ''
-    response.on('data', function(chunk) {
-      str += chunk;
-    });
-
-    response.on('end', function() {
-      resolve(JSON.parse(str));
-    });
-  });
-
-  req.write(JSON.stringify(body));
-  req.end();
-});
-
 function updateLight(id, value) {
   let parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
   let red = parse[1];
   let green = parse[2];
   let blue = parse[3];
-  let xy = rgbToXy(red, green, blue);
+  let xy = Conversions.rgbToXy(red, green, blue);
 
-  return hueRequest('PUT', `/lights/${id}/state`, {"xy": xy});
-}
-
-function rgbToXy(red, green, blue) {
-  if (red > 0.04045) {
-    red = Math.pow((red + 0.055) / (1.0 + 0.055), 2.4);
-  }
-  else red = (red / 12.92);
-
-  if (green > 0.04045) {
-    green = Math.pow((green + 0.055) / (1.0 + 0.055), 2.4);
-  }
-  else green = (green / 12.92);
-
-  if (blue > 0.04045) {
-    blue = Math.pow((blue + 0.055) / (1.0 + 0.055), 2.4);
-  }
-  else blue = (blue / 12.92);
-
-  var X = red * 0.664511 + green * 0.154324 + blue * 0.162028;
-  var Y = red * 0.283881 + green * 0.668433 + blue * 0.047685;
-  var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
-  var x = X / (X + Y + Z);
-  var y = Y / (X + Y + Z);
-  return new Array(x,y);
-}
-
-function rgbToHex(red, green, blue) {
-  let r = Math.round(red).toString(16);
-  let g = Math.round(green).toString(16);
-  let b = Math.round(blue).toString(16);
-
-  if (r.length < 2) r = "0" + r;
-  if (g.length < 2) g = "0" + g;
-  if (b.length < 2) b = "0" + b;
-  return `#${r}${g}${b}`;
-}
-
-function xyBriToHex(x, y, bri) {
-  let rgb = xyBriToRgb(x, y, bri);
-  return rgbToHex(rgb.r, rgb.g, rgb.b);
-}
-
-function xyBriToRgb(x, y, bri) {
-  let z = 1.0 - x - y;
-  let Y = bri / 255.0; // Brightness of lamp
-  let X = (Y / y) * x;
-  let Z = (Y / y) * z;
-  let r = X * 1.612 - Y * 0.203 - Z * 0.302;
-  let g = -X * 0.509 + Y * 1.412 + Z * 0.066;
-  let b = X * 0.026 - Y * 0.072 + Z * 0.962;
-  r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
-  g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
-  b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
-  let maxValue = Math.max(r,g,b);
-  r /= maxValue;
-  g /= maxValue;
-  b /= maxValue;
-
-  r = Math.round(r * 255); if(r < 0) r = 0; if(r > 255) r = 255;
-  g = Math.round(g * 255); if(g < 0) g = 0; if(g > 255) g = 255;
-  b = Math.round(b * 255); if(b < 0) b = 0; if(b > 255) b = 255;
-
-  return {r: r, g: g, b: b};
-}
-
-function ctToHex(ct) {
-  let rgb = ctToRgb(ct);
-  return rgbToHex(rgb.r, rgb.g, rgb.b);
-}
-
-function ctToRgb(ct) {
-  let kelvin = (10 ** 6) / ct / 100;
-  let r, g, b;
-
-  // Red
-  if(kelvin <= 66) {
-    r = 255;
-  } else {
-    r = kelvin - 60;
-    r = 329.698727446 * (r ** -0.1332047592);
-  }
-
-  // Green
-  if(kelvin <= 66) {
-    g = kelvin;
-    g = 99.4708025861 * Math.log(g) - 161.1195681661;
-  } else {
-    g = kelvin - 60;
-    g = 288.1221695283 * (g ** -0.0755148492);
-  }
-
-  // Blue
-  if(kelvin >= 66) {
-    b = 255;
-  } else {
-    if(kelvin <= 19) {
-      b = 0;
-    } else {
-      b = kelvin - 10;
-      b = 138.5177312231 * Math.log(b) - 305.0447927307;
-    }
-  }
-
-  r = Math.round(r); if(r < 0) r = 0; if(r > 255) r = 255;
-  g = Math.round(g); if(g < 0) g = 0; if(g > 255) g = 255;
-  b = Math.round(b); if(b < 0) b = 0; if(b > 255) b = 255;
-
-  return {r: r, g: g, b: b};
+  return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
 }
 
 app.listen(PORT, HOST);

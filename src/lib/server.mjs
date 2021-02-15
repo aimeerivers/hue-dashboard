@@ -1,13 +1,9 @@
 'use strict';
 
-const express = require('express');
-const http = require('http');
-const cors = require('cors');
-const pug = require('pug');
-
-const { callbackify } = require('util');
-const { group } = require('console');
-const { SCHED_NONE } = require('cluster');
+import express from 'express';
+import cors from 'cors';
+import http from 'http';
+import pug from 'pug';
 
 const COLOURS = {
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715': '#fbbbcd', // Blomstrende forår

@@ -1,15 +1,16 @@
-import http from 'http';
+import * as http from 'http';
+import * as T from './hue_api_types';
 
 export const getGroups = () =>
-  request('GET', '/groups', {});
+  request('GET', '/groups', {}) as Promise<T.Groups>;
 
 export const getScenes = () =>
-  request('GET', '/scenes', {});
+  request('GET', '/scenes', {}) as Promise<T.Scenes>;
 
 export const getLights = () =>
-  request('GET', '/lights', {});
+  request('GET', '/lights', {}) as Promise<T.Lights>;
 
-export const request = (method, path, body) => new Promise((resolve, reject) => {
+export const request = (method: string, path: string, body: any) => new Promise((resolve, reject) => {
   var options = {
     host: process.env.HUE_BRIDGE_IP_ADDRESS,
     path: `/api/${process.env.HUE_USERNAME}${path}`,

@@ -1,4 +1,4 @@
-export function rgbToXy(red, green, blue) {
+export function rgbToXy(red: number, green: number, blue: number) {
   if (red > 0.04045) {
     red = Math.pow((red + 0.055) / (1.0 + 0.055), 2.4);
   }
@@ -22,7 +22,7 @@ export function rgbToXy(red, green, blue) {
   return new Array(x,y);
 }
 
-function rgbToHex(red, green, blue) {
+function rgbToHex(red: number, green: number, blue: number) {
   let r = Math.round(red).toString(16);
   let g = Math.round(green).toString(16);
   let b = Math.round(blue).toString(16);
@@ -33,12 +33,12 @@ function rgbToHex(red, green, blue) {
   return `#${r}${g}${b}`;
 }
 
-export function xyBriToHex(x, y, bri) {
+export function xyBriToHex(x: number, y: number, bri: number) {
   let rgb = xyBriToRgb(x, y, bri);
   return rgbToHex(rgb.r, rgb.g, rgb.b);
 }
 
-function xyBriToRgb(x, y, bri) {
+function xyBriToRgb(x: number, y: number, bri: number) {
   let z = 1.0 - x - y;
   let Y = bri / 255.0; // Brightness of lamp
   let X = (Y / y) * x;
@@ -61,12 +61,12 @@ function xyBriToRgb(x, y, bri) {
   return {r: r, g: g, b: b};
 }
 
-export function ctToHex(ct) {
+export function ctToHex(ct: number) {
   let rgb = ctToRgb(ct);
   return rgbToHex(rgb.r, rgb.g, rgb.b);
 }
 
-function ctToRgb(ct) {
+function ctToRgb(ct: number) {
   let kelvin = (10 ** 6) / ct / 100;
   let r, g, b;
 

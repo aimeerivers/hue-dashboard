@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "Hue controller webapp",
   "author": "Aimee Rivers <aimee@aimeerivers.com>",
-  "main": "server.js",
+  "main": "src/lib/server.mjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/lib/server.mjs"
   },
+  "type": "module",
   "dependencies": {
     "express": "latest",
     "cors": "latest",

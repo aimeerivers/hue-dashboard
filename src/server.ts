@@ -1,5 +1,5 @@
-import * as express from 'express';
-import * as cors from 'cors';
+import express from 'express';
+import cors from 'cors';
 import * as pug from 'pug';
 
 import * as Conversions from './conversions';
@@ -24,10 +24,6 @@ const COLOURS = {
   '63d50cd6-5909-4f7b-8810-137d08f57c54': '#fd4d14', // Chinatown
   '6799326d-e9cd-4b2a-9166-287509f841f3': '#fbd27d', // Gyldent efterår
 }
-
-// Constants
-const PORT = 8080;
-const HOST = '0.0.0.0';
 
 // App
 const app = express();
@@ -218,5 +214,4 @@ function updateLight(id: string, value: string) {
   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
 }
 
-app.listen(PORT, HOST);
-console.log(`Running on http://${HOST}:${PORT}`);
+export default app;

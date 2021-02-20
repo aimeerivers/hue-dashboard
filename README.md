@@ -12,16 +12,14 @@ Find an IP address here https://discovery.meethue.com/
 
 See step 3 on https://developers.meethue.com/develop/get-started-2/
 
+## Configure
+
+    cp .env.example .env
+    
+Then edit `.env` and fill in the values.
+
 ## Run Hue Dashboard
 
-    docker run -it --init \
-      -p 9000:8080 \
-      -v $PWD/src:/usr/src/app/src \
-      -v $PWD/public:/usr/src/app/public \
-      -e "HUE_BRIDGE_IP_ADDRESS=<ipaddress>" \
-      -e "HUE_USERNAME=<username>" \
-      hue-dashboard
+    ./run.sh
 
 visit http://localhost:9000/
-
-

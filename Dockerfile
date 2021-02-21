@@ -10,5 +10,5 @@ RUN npm install
 RUN mkdir src
 COPY src/ src/
 
-EXPOSE 8080
+EXPOSE 9000
 CMD [ "yarn", "start" ]

@@ -27,7 +27,7 @@ const COLOURS = {
 }
 
 // Constants
-const PORT = 8080;
+const PORT = 9000;
 const HOST = '0.0.0.0';
 
 // App

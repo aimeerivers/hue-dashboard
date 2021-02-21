@@ -1,6 +1,9 @@
 #!/bin/bash
 
+set -eu
+
 yarn
+yarn build
 
 [ -f .env ] && source .env
 

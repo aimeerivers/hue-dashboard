@@ -8,7 +8,9 @@ RUN npm config set strict-ssl false
 RUN npm install
 
 RUN mkdir src
+COPY tsconfig.json .
 COPY src/ src/
+RUN yarn build
 
-EXPOSE 8080
-CMD [ "yarn", "start" ]
+EXPOSE 9000
+CMD [ "node", "dist/server.js" ]

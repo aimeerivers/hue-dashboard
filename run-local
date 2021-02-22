@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -eu
+
+yarn
+yarn build
+
+[ -f .env ] && source .env
+
+env \
+      "HUE_BRIDGE_IP_ADDRESS=$HUE_BRIDGE_IP_ADDRESS" \
+      "HUE_USERNAME=$HUE_USERNAME" \
+      yarn start

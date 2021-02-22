@@ -1,13 +1,14 @@
 import http from 'http';
+import {Groups, Lights, Scenes} from './hue_api_types';
 
 export const getGroups = () =>
-  request('GET', '/groups', {});
+  request('GET', '/groups', {}) as Promise<Groups>;
 
 export const getScenes = () =>
-  request('GET', '/scenes', {});
+  request('GET', '/scenes', {}) as Promise<Scenes>;
 
 export const getLights = () =>
-  request('GET', '/lights', {});
+  request('GET', '/lights', {}) as Promise<Lights>;
 
 export const request = (method, path, body) => new Promise((resolve, reject) => {
   var options = {

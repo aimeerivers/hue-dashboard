@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -eu
+
+docker build -t hue-dashboard .
+
+[ -f .env ] && source .env
+
+exec \
+    docker run -it --init \
+      -p 9000:9000 \
+      -v $PWD/src:/usr/src/app/src \
+      -v $PWD/public:/usr/src/app/public \
+      -e "HUE_BRIDGE_IP_ADDRESS=$HUE_BRIDGE_IP_ADDRESS" \
+      -e "HUE_USERNAME=$HUE_USERNAME" \
+      hue-dashboard

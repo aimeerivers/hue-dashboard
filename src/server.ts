@@ -1,11 +1,10 @@
-'use strict';
-
 import express from 'express';
 import cors from 'cors';
 import pug from 'pug';
 
-import * as Conversions from './conversions.mjs';
-import * as HueAPI from './hue_api.mjs';
+import * as Conversions from './conversions';
+import * as HueAPI from './hue_api';
+import {Group} from "./hue_api_types";
 
 const COLOURS = {
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715': '#fbbbcd', // Blomstrende forår
@@ -27,7 +26,7 @@ const COLOURS = {
 }
 
 // Constants
-const PORT = 8080;
+const PORT = 9000;
 const HOST = '0.0.0.0';
 
 // App
@@ -145,7 +144,7 @@ app.post('/light/:lightId/random/:time?', (req, res) => {
 
 app.post('/group/:groupId/cycle/:time?', (req, res) =>
   Promise.all([
-    HueAPI.request('GET', `/groups/${req.params.groupId}`, {}),
+    HueAPI.request('GET', `/groups/${req.params.groupId}`, {}) as Promise<Group>,
     HueAPI.getLights(),
   ]).then(([group, allLights]) => {
     let transitionTime;

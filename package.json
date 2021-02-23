@@ -10,6 +10,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "canvas": "latest",
     "cors": "latest",
     "express": "latest",
     "pug": "latest"

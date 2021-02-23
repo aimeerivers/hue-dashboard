@@ -79,7 +79,6 @@ app.get('/dashboard', (req, res) => {
           room.scenes.push({
             id: sceneId,
             name: scene.name,
-            image: scene.image,
             imageUrl: `/images/scenes/${scene.image}.png`,
             colour: COLOURS[scene.image]
           })

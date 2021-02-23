@@ -4,6 +4,8 @@ import {Light} from "./hue_api_types";
 
 export type BackgroundTask = {
     lightId: string;
+    transitiontime: number;
+    interval: number;
 };
 
 const backgroundTasks: Map<string, {
@@ -21,7 +23,7 @@ export const putBackgroundTask = (task: BackgroundTask) => {
     console.log("set task", { lightId: task.lightId, task });
 
     backgroundTasks.set(task.lightId, {
-        timer: setInterval(tick, 1000, task.lightId),
+        timer: setInterval(tick, task.interval, task.lightId),
         task
     });
 };
@@ -54,7 +56,12 @@ const tick = (lightId: string) => {
         const b = Math.floor(Math.random() * 255);
         const xy = Conversions.rgbToXy(r, g, b);
 
-        HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": 0})
+        const state = {
+            xy,
+            transitiontime: task.task.transitiontime,
+        };
+
+        HueAPI.request('PUT', `/lights/${lightId}/state`, state)
             .catch(e => console.log({ task: "failed", lightId, e }));
     });
 };

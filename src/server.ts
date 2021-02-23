@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import {createCanvas} from 'canvas';
 
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
+import {drawSceneColours} from './pictures';
 
 const STANDARD_SCENES = [
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715', // Blomstrende forår
@@ -212,20 +212,6 @@ function updateLight(id, value) {
   let xy = Conversions.rgbToXy(red, green, blue);
 
   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
-}
-
-function drawSceneColours(sceneColours) {
-  if(sceneColours.length == 0) sceneColours = ["#ffd6b5"];
-  const canvas = createCanvas(144, 144);
-  let ctx = canvas.getContext('2d');
-  let grd = ctx.createLinearGradient(0, 0, 200, 200);
-  for(var index = 0; index < sceneColours.length - 1; index++) {
-    grd.addColorStop(index/sceneColours.length, sceneColours[index]);
-  }
-  grd.addColorStop(1, sceneColours[sceneColours.length - 1]);
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, 144, 144);
-  return canvas;
 }
 
 app.listen(PORT, HOST);

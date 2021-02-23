@@ -1,12 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import pug from 'pug';
+import {createCanvas} from 'canvas';
 
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
-
-const { createCanvas, loadImage } = require('canvas');
 
 const STANDARD_SCENES = [
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715', // Blomstrende forår
@@ -192,7 +191,7 @@ app.get('/scene/:sceneId.png', (req, res) => {
     .then(scene => {
       console.log(scene.lightstates);
       res.setHeader('Content-Type', 'image/png');
-      draw().pngStream().pipe(res);
+      draw().createPNGStream().pipe(res);
     })
 });
 

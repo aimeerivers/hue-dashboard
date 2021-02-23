@@ -29,6 +29,5 @@ for (var i = 0; i < rooms.length; i++) {
 }
 
 for (var i = 0; i < scenes.length; i++) {
-  scenes[i].style.borderColor = scenes[i].getAttribute("data-colour");
   scenes[i].addEventListener('click', setScene, false);
 }

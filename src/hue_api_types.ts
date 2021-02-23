@@ -70,6 +70,17 @@ export type Scene = {
     image: string;
     lastupdated: string;
     version: number;
+    lightstates: Record<string, {
+        on: boolean;
+        bri: number;
+        xy: [number, number];
+        hue: number;
+        sat: number;
+        effect: string;
+        ct: number;
+        alert: string;
+        colormode: string;
+    }>;
 }
 
 export type Scenes = Record<string, Scene>

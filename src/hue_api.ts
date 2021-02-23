@@ -1,11 +1,14 @@
 import http from 'http';
-import {Groups, Lights, Scenes} from './hue_api_types';
+import {Groups, Lights, Scenes, Scene} from './hue_api_types';
 
 export const getGroups = () =>
   request('GET', '/groups', {}) as Promise<Groups>;
 
 export const getScenes = () =>
   request('GET', '/scenes', {}) as Promise<Scenes>;
+
+export const getScene = (sceneId: string) =>
+  request('GET', `/scenes/${sceneId}`, {}) as Promise<Scene>;
 
 export const getLights = () =>
   request('GET', '/lights', {}) as Promise<Lights>;
@@ -38,4 +41,3 @@ export const request = (method, path, body) => new Promise((resolve, reject) => 
   req.write(JSON.stringify(body));
   req.end();
 });
-

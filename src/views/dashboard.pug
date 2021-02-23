@@ -13,7 +13,7 @@ html(lang='en')
         input(class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
         br
         each scene in room.scenes
-          img.scene(src=scene.imageUrl title=scene.name data-colour=scene.colour data-room-id=room.id data-scene-id=scene.id)
+          img.scene(src=scene.imageUrl title=scene.name data-room-id=room.id data-scene-id=scene.id)
 
 
   script(src='/js/app.js')

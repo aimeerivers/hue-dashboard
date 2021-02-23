@@ -173,8 +173,14 @@ app.get('/background', (_req, res) => {
 
 app.post('/background/light/:lightId', (req, res) => {
   const lightId = req.params.lightId;
+  const body = req.body;
+
   HueAPI.getLight(lightId).then(_light => {
-    putBackgroundTask({ lightId });
+    putBackgroundTask({
+      lightId,
+      transitiontime: body['transitiontime'] || 0,
+      interval: body['interval'] || 1000,
+    });
     res.sendStatus(200);
   }).catch(_e => {
     res.sendStatus(400);

@@ -25,6 +25,13 @@ const STANDARD_SCENES = [
   '6799326d-e9cd-4b2a-9166-287509f841f3', // Gyldent efterår
 ];
 
+const UNWANTED_SCENE_NAMES = [
+  'Scene recoveryScene',
+  'Scene previous',
+  'Scene recoveryScene ',
+  'Scene previous ',
+]
+
 // Constants
 const PORT = 9000;
 const HOST = '0.0.0.0';
@@ -73,7 +80,7 @@ app.get('/dashboard', (req, res) => {
   Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
     for (let sceneId in scenes) {
       let scene = scenes[sceneId];
-      if (scene.type == 'GroupScene' && scene.group) {
+      if (scene.type == 'GroupScene' && scene.group && !UNWANTED_SCENE_NAMES.includes(scene.name)) {
         let room = rooms.find(e => e.id == scene.group);
         let sceneImage = `/scene/${sceneId}.png`;
         if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`

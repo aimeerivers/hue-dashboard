@@ -5,6 +5,7 @@ import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
 import {drawSceneColours} from './pictures';
+import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask} from "./background";
 
 const STANDARD_SCENES = [
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715', // Blomstrende forår
@@ -165,6 +166,39 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
     res.sendStatus(200);
   })
 );
+
+app.get('/background', (_req, res) => {
+  res.status(200).send(getBackgroundTasks());
+});
+
+app.post('/background/light/:lightId', (req, res) => {
+  const lightId = req.params.lightId;
+  HueAPI.getLight(lightId).then(_light => {
+    putBackgroundTask({ lightId });
+    res.sendStatus(200);
+  }).catch(_e => {
+    res.sendStatus(400);
+  });
+});
+
+app.delete('/background/light/:lightId', (req, res) => {
+  const lightId = req.params.lightId;
+
+  HueAPI.getLight(lightId).then(_light => {
+    deleteBackgroundTask(lightId);
+    res.sendStatus(204);
+  }).catch(_e => {
+    res.sendStatus(400);
+  });
+});
+
+app.delete('/background', (req, res) => {
+  for (const task of getBackgroundTasks()) {
+    deleteBackgroundTask(task.lightId);
+  }
+
+  res.sendStatus(204);
+});
 
 app.put('/clock', (req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }

@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import pug from 'pug';
 import {createCanvas} from 'canvas';
 
 import * as Conversions from './conversions';

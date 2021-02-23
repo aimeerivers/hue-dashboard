@@ -188,9 +188,9 @@ app.put('/clock', (req, res) => {
 });
 
 app.get('/scene/:sceneId.png', (req, res) => {
-  HueAPI.request('GET', `/scenes/${req.params.sceneId}`, {})
+  HueAPI.getScene(req.params.sceneId)
     .then(scene => {
-      console.log(scene);
+      console.log(scene.lightstates);
       res.setHeader('Content-Type', 'image/png');
       draw().pngStream().pipe(res);
     })

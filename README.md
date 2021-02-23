@@ -71,3 +71,36 @@ Cycle colours in group 1, immediately
 Cycle colours in group 1, taking 5 seconds to change
 
     curl -X POST http://localhost:9000/group/1/cycle/50
+
+## Background tasks
+
+Instead of calling CURL commands on a timer, we can set up a background task. This is very much work-in-progress and is likely to change in the future.
+
+### Random colours
+
+Set light 1 to a random colour, every second, immediately
+
+    curl -X POST http://localhost:9000/background/light/1
+
+Set light 1 to a random colour, every 5 seconds, taking 3 seconds to change
+
+    curl -X POST -H \
+      "Content-Type: application/json" \
+      -d '{"interval": 5000, "transitiontime": 30}' \
+      http://localhost:9000/background/light/1
+
+### List background tasks
+
+Get a list of background tasks that are currently running
+
+    curl -X GET http://localhost:9000/background
+
+### Stop background tasks
+
+Stop the background task currently running on light 1
+
+    curl -X DELETE http://localhost:9000/background/light/1
+
+Stop all background tasks
+
+    curl -X DELETE http://localhost:9000/background

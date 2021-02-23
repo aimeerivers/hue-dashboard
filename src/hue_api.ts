@@ -41,4 +41,3 @@ export const request = (method, path, body) => new Promise((resolve, reject) => 
   req.write(JSON.stringify(body));
   req.end();
 });
-

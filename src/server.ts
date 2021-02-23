@@ -188,9 +188,19 @@ app.put('/clock', (req, res) => {
 app.get('/scene/:sceneId.png', (req, res) => {
   HueAPI.getScene(req.params.sceneId)
     .then(scene => {
-      console.log(scene.lightstates);
+      let sceneColours = [];
+      for(let index in scene.lightstates) {
+        let lightState = scene.lightstates[index];
+        if(lightState.on) {
+          if(lightState.xy && lightState.bri) {
+            sceneColours.push(Conversions.xyBriToHex(lightState.xy[0], lightState.xy[1], lightState.bri));
+          } else if(lightState.ct) {
+            sceneColours.push(Conversions.ctToHex(lightState.ct));
+          }
+        }
+      }
       res.setHeader('Content-Type', 'image/png');
-      draw().createPNGStream().pipe(res);
+      drawSceneColours(sceneColours).createPNGStream().pipe(res);
     })
 });
 
@@ -204,13 +214,14 @@ function updateLight(id, value) {
   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
 }
 
-function draw() {
+function drawSceneColours(sceneColours) {
+  if(sceneColours.length == 0) sceneColours = ["#ffd6b5"];
   const canvas = createCanvas(144, 144);
   let ctx = canvas.getContext('2d');
   let grd = ctx.createLinearGradient(0, 0, 200, 200);
-  grd.addColorStop(0, "red");
-  grd.addColorStop(0.5, "green");
-  grd.addColorStop(1, "white");
+  grd.addColorStop(0, sceneColours[0]);
+  // grd.addColorStop(0.5, "green");
+  grd.addColorStop(1, sceneColours[sceneColours.length - 1]);
   ctx.fillStyle = grd;
   ctx.fillRect(0, 0, 144, 144);
   return canvas;

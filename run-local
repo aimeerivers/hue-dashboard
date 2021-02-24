@@ -8,6 +8,8 @@ yarn lint
 
 [ -f .env ] && source .env
 
+mkdir -p var
+
 env \
       "HUE_BRIDGE_IP_ADDRESS=$HUE_BRIDGE_IP_ADDRESS" \
       "HUE_USERNAME=$HUE_USERNAME" \

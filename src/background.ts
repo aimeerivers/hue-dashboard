@@ -1,3 +1,5 @@
+import * as fs from "fs";
+
 import * as HueAPI from './hue_api';
 import * as Conversions from './conversions';
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "./hue_api";
@@ -56,8 +58,12 @@ export const putBackgroundTask = (config: BackgroundTaskConfig): string | null =
     // TODO: reject zero light IDs
     if (config.lightIds.some(lightId => tasksByLight.has(lightId))) return null;
 
-    ++nextId;
-    const taskId = nextId.toString();
+    let taskId: string;
+    for (;;) {
+        ++nextId;
+        taskId = nextId.toString();
+        if (!backgroundTasks.has(taskId)) break;
+    }
 
     console.log("set task", { taskId, config });
 
@@ -65,6 +71,7 @@ export const putBackgroundTask = (config: BackgroundTaskConfig): string | null =
     backgroundTasks.set(taskId, details);
     config.lightIds.forEach(lightId => tasksByLight.set(lightId, taskId));
 
+    persist();
     return taskId;
 };
 
@@ -104,6 +111,8 @@ export const deleteBackgroundTask = (taskId: string) => {
     clearInterval(task.timer);
     task.config.lightIds.forEach(lightId => tasksByLight.delete(lightId));
     backgroundTasks.delete(taskId);
+
+    persist();
 };
 
 const tick = (taskId: string) => {
@@ -153,3 +162,61 @@ const randomXY = () => {
     const b = Math.floor(Math.random() * 255);
     return Conversions.rgbToXy(r, g, b);
 };
+
+const TASKS_FILE = "var/tasks.json";
+
+const persist = () => {
+    const data = [...backgroundTasks.entries()]
+        .map(([taskId, task]) =>
+            ({
+                id: taskId,
+                task: {
+                    ...task,
+                    timer: 0,
+                },
+            })
+        );
+    console.log("persist", data);
+    const text = JSON.stringify(data);
+
+    // Not atomic
+    try {
+        fs.writeFileSync(TASKS_FILE, text, {encoding: 'utf-8'});
+    } catch (e) {
+        console.warn("Can't persist tasks", e);
+    }
+};
+
+const load = () => {
+    let data: {id: string, task: BackgroundTaskDetails}[];
+
+    try {
+        const text = fs.readFileSync(TASKS_FILE, {encoding: 'utf-8'});
+        data = JSON.parse(text);
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            data = [];
+        } else {
+            throw e;
+        }
+    }
+
+    // No validation, obvs
+
+    data.forEach(({id, task}) => {
+        const timer = setInterval(tick, task.config.intervalSeconds * 1000, id);
+
+        backgroundTasks.set(
+            id,
+            {
+                ...task,
+                timer,
+            }
+        );
+
+        task.config.lightIds.forEach(lightId => tasksByLight.set(lightId, id));
+    });
+};
+
+load();
+persist();

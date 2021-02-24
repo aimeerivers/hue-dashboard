@@ -53,10 +53,10 @@ app.get('/', (req, res) => {
 
 app.get('/dashboard', (req, res) => {
   const promiseRooms = HueAPI.getGroups().then(groups => {
-    let rooms = [];
+    const rooms = [];
 
-    for(let groupId in groups) {
-      let group = groups[groupId];
+    for(const groupId in groups) {
+      const group = groups[groupId];
       if(group.type == 'Room' || group.type == 'Zone') {
         let colour = "";
         if(group.state.any_on) {
@@ -80,10 +80,10 @@ app.get('/dashboard', (req, res) => {
   });
 
   Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
-    for (let sceneId in scenes) {
-      let scene = scenes[sceneId];
+    for (const sceneId in scenes) {
+      const scene = scenes[sceneId];
       if (scene.type == 'GroupScene' && scene.group && !UNWANTED_SCENE_NAMES.includes(scene.name)) {
-        let room = rooms.find(e => e.id == scene.group);
+        const room = rooms.find(e => e.id == scene.group);
         let sceneImage = `/scene/${sceneId}.png`;
         if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
         if (room) {
@@ -198,9 +198,9 @@ app.put('/clock', (req, res) => {
 app.get('/scene/:sceneId.png', (req, res) => {
   HueAPI.getScene(req.params.sceneId)
     .then(scene => {
-      let sceneColours = [];
-      for(let index in scene.lightstates) {
-        let lightState = scene.lightstates[index];
+      const sceneColours = [];
+      for(const index in scene.lightstates) {
+        const lightState = scene.lightstates[index];
         if(lightState.on) {
           if(lightState.xy && lightState.bri) {
             sceneColours.push(Conversions.xyBriToHex(lightState.xy[0], lightState.xy[1], lightState.bri));
@@ -215,11 +215,11 @@ app.get('/scene/:sceneId.png', (req, res) => {
 });
 
 function updateLight(id, value) {
-  let parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
-  let red = parse[1];
-  let green = parse[2];
-  let blue = parse[3];
-  let xy = Conversions.rgbToXy(red, green, blue);
+  const parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
+  const red = parse[1];
+  const green = parse[2];
+  const blue = parse[3];
+  const xy = Conversions.rgbToXy(red, green, blue);
 
   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
 }

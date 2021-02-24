@@ -122,7 +122,7 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) =>
 app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
   let transitionTime;
   if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (transitionTime === NaN) transitionTime = 4;
+  if (isNaN(transitionTime)) transitionTime = 4;
 
   const lightId = parseInt(req.params.lightId);
 
@@ -139,7 +139,7 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
 app.post('/light/:lightId/random/:time?', (req, res) => {
   let transitionTime;
   if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (transitionTime === NaN) transitionTime = 4;
+  if (isNaN(transitionTime)) transitionTime = 4;
 
   const lightId = parseInt(req.params.lightId);
   const r = Math.floor(Math.random() * 255);
@@ -158,7 +158,8 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
   ]).then(([group, allLights]) => {
     let transitionTime;
     if(req.params.time) transitionTime = parseInt(req.params.time);
-    if(transitionTime === NaN) transitionTime = 4;
+    if (isNaN(transitionTime)) transitionTime = 4;
+
     const colourLightIdsInThisGroup = group.lights
       .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
       .sort();

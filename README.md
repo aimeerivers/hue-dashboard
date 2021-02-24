@@ -80,14 +80,25 @@ Instead of calling CURL commands on a timer, we can set up a background task. Th
 
 Set light 1 to a random colour, every second, immediately
 
-    curl -X POST http://localhost:9000/background/light/1
+    curl -X POST -H \
+      "Content-Type: application/json" \
+      -d '{"type": "random-same", "lightIds": [1]}' \
+      http://localhost:9000/background
 
-Set light 1 to a random colour, every 5 seconds, taking 3 seconds to change
+
+Set lights 1 and 2 to (the same) random colour, every 5 seconds, taking 3 seconds to change
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"interval": 5000, "transitiontime": 30}' \
+      -d '{"type": "random-same", "lightIds": [1, 2], "interval": 5000, "transitiontime": 30}' \
       http://localhost:9000/background/light/1
+
+Set lights 1 and 2 to (probably) different random colours, every second, immediately
+
+    curl -X POST -H \
+      "Content-Type: application/json" \
+      -d '{"type": "random-different", "lightIds": [1, 2]}' \
+      http://localhost:9000/background
 
 ### List background tasks
 

@@ -175,39 +175,47 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
 );
 
 app.get('/background', (_req, res) => {
-  res.status(200).send(getBackgroundTasks());
+  const answer = {};
+  for (const [taskId, config] of getBackgroundTasks()) {
+    answer[taskId] = config;
+  }
+  res.status(200).send(answer);
 });
 
-app.post('/background/light/:lightId', (req, res) => {
-  const lightId = req.params.lightId;
+app.post('/background', (req, res) => {
   const body = req.body;
 
-  HueAPI.getLight(lightId).then(_light => {
-    putBackgroundTask({
-      lightId,
+  const type = body.type;
+  if (type !== 'random-different' && type !== 'random-same') return res.sendStatus(400);
+
+  const lightIds = body.lightIds;
+  if (!Array.isArray(lightIds)) return res.sendStatus(400);
+
+  HueAPI.getLights().then(lights => {
+    if (!lightIds.every(lightId => lights[lightId])) return res.sendStatus(400);
+
+    const taskId = putBackgroundTask({
+      type,
+      lightIds,
       transitiontime: body['transitiontime'] || 0,
       interval: body['interval'] || 1000,
     });
-    res.sendStatus(200);
-  }).catch(_e => {
-    res.sendStatus(400);
+
+    const config = getBackgroundTasks().get(taskId);
+
+    res.send({ [taskId]: config });
   });
 });
 
-app.delete('/background/light/:lightId', (req, res) => {
-  const lightId = req.params.lightId;
-
-  HueAPI.getLight(lightId).then(_light => {
-    deleteBackgroundTask(lightId);
-    res.sendStatus(204);
-  }).catch(_e => {
-    res.sendStatus(400);
-  });
+app.delete('/background/:taskId', (req, res) => {
+  const taskId = req.params.taskId;
+  deleteBackgroundTask(taskId);
+  res.sendStatus(204);
 });
 
 app.delete('/background', (req, res) => {
-  for (const task of getBackgroundTasks()) {
-    deleteBackgroundTask(task.lightId);
+  for (const task of getBackgroundTasks().keys()) {
+    deleteBackgroundTask(task);
   }
 
   res.sendStatus(204);

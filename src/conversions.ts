@@ -1,4 +1,4 @@
-export function rgbToXy(red, green, blue) {
+export function rgbToXy(red, green, blue): [number, number] {
   if (red > 0.04045) {
     red = Math.pow((red + 0.055) / (1.0 + 0.055), 2.4);
   }
@@ -19,7 +19,7 @@ export function rgbToXy(red, green, blue) {
   var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
   var x = X / (X + Y + Z);
   var y = Y / (X + Y + Z);
-  return new Array(x,y);
+  return [x, y];
 }
 
 function rgbToHex(red, green, blue) {

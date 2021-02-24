@@ -47,16 +47,16 @@ app.set('view engine', 'pug');
 app.set('views', './src/views');
 app.use(express.static('public'));
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.redirect('/dashboard');
 });
 
-app.get('/dashboard', (req, res) => {
+app.get('/dashboard', (_req, res) => {
   const promiseRooms = HueAPI.getGroups().then(groups => {
-    let rooms = [];
+    const rooms = [];
 
-    for(let groupId in groups) {
-      let group = groups[groupId];
+    for(const groupId in groups) {
+      const group = groups[groupId];
       if(group.type == 'Room' || group.type == 'Zone') {
         let colour = "";
         if(group.state.any_on) {
@@ -80,10 +80,10 @@ app.get('/dashboard', (req, res) => {
   });
 
   Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
-    for (let sceneId in scenes) {
-      let scene = scenes[sceneId];
+    for (const sceneId in scenes) {
+      const scene = scenes[sceneId];
       if (scene.type == 'GroupScene' && scene.group && !UNWANTED_SCENE_NAMES.includes(scene.name)) {
-        let room = rooms.find(e => e.id == scene.group);
+        const room = rooms.find(e => e.id == scene.group);
         let sceneImage = `/scene/${sceneId}.png`;
         if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
         if (room) {
@@ -122,7 +122,7 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) =>
 app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
   let transitionTime;
   if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (transitionTime === NaN) transitionTime = 4;
+  if (isNaN(transitionTime)) transitionTime = 4;
 
   const lightId = parseInt(req.params.lightId);
 
@@ -139,7 +139,7 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
 app.post('/light/:lightId/random/:time?', (req, res) => {
   let transitionTime;
   if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (transitionTime === NaN) transitionTime = 4;
+  if (isNaN(transitionTime)) transitionTime = 4;
 
   const lightId = parseInt(req.params.lightId);
   const r = Math.floor(Math.random() * 255);
@@ -158,7 +158,8 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
   ]).then(([group, allLights]) => {
     let transitionTime;
     if(req.params.time) transitionTime = parseInt(req.params.time);
-    if(transitionTime === NaN) transitionTime = 4;
+    if (isNaN(transitionTime)) transitionTime = 4;
+
     const colourLightIdsInThisGroup = group.lights
       .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
       .sort();
@@ -175,7 +176,7 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
   })
 );
 
-app.put('/clock', (req, res) => {
+app.put('/clock', (_req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }
   // if(req.body.months) { updateLight(12, req.body.months.rgb); }
   // if(req.body.days) { updateLight(11, req.body.days.rgb); }
@@ -197,9 +198,9 @@ app.put('/clock', (req, res) => {
 app.get('/scene/:sceneId.png', (req, res) => {
   HueAPI.getScene(req.params.sceneId)
     .then(scene => {
-      let sceneColours = [];
-      for(let index in scene.lightstates) {
-        let lightState = scene.lightstates[index];
+      const sceneColours = [];
+      for(const index in scene.lightstates) {
+        const lightState = scene.lightstates[index];
         if(lightState.on) {
           if(lightState.xy && lightState.bri) {
             sceneColours.push(Conversions.xyBriToHex(lightState.xy[0], lightState.xy[1], lightState.bri));
@@ -213,15 +214,15 @@ app.get('/scene/:sceneId.png', (req, res) => {
     })
 });
 
-function updateLight(id, value) {
-  let parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
-  let red = parse[1];
-  let green = parse[2];
-  let blue = parse[3];
-  let xy = Conversions.rgbToXy(red, green, blue);
-
-  return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
-}
+// function updateLight(id, value) {
+//   const parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
+//   const red = parse[1];
+//   const green = parse[2];
+//   const blue = parse[3];
+//   const xy = Conversions.rgbToXy(red, green, blue);
+//
+//   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
+// }
 
 BackgroundRoutes.addTo(app);
 ProxyRoutes.addTo(app);

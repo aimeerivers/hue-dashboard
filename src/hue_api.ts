@@ -17,21 +17,21 @@ export const getLights = () =>
   request('GET', '/lights', {}) as Promise<Lights>;
 
 export const request = (method, path, body) => new Promise((resolve, reject) => {
-  var options = {
+  const options = {
     host: process.env.HUE_BRIDGE_IP_ADDRESS,
     path: `/api/${process.env.HUE_USERNAME}${path}`,
     port: '80',
     method: method.toUpperCase()
   };
 
-  var req = http.request(options, function(response) {
+  const req = http.request(options, function(response) {
     console.log(`${method} ${path} => ${response.statusCode} ${response.statusMessage}`);
 
     if (response.statusCode !== 200) {
       reject(`HTTP response status is ${response.statusCode} ${response.statusMessage}`);
     }
 
-    var str = ''
+    let str = ''
     response.on('data', function(chunk) {
       str += chunk;
     });

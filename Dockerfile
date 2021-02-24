@@ -13,8 +13,10 @@ RUN npm install
 
 RUN mkdir src
 COPY tsconfig.json .
+COPY .eslintrc.js .
 COPY src/ src/
 RUN yarn build
+RUN yarn lint
 
 EXPOSE 9000
 CMD [ "node", "dist/server.js" ]

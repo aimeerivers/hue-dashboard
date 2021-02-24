@@ -42,7 +42,7 @@ Set light 1 to yellow, immediately
 
 Set light 1 to green, taking 3 seconds to change
 
-    curl -X POST http://localhost:9000/light/14/rgb/0/255/0/30
+    curl -X POST http://localhost:9000/light/14/rgb/0/255/0/3
 
 ### Random colours
 
@@ -56,7 +56,7 @@ Set light 1 to a random colour, immediately
 
 Set light 1 to a random colour, taking 3 seconds to change
 
-    curl -X POST http://localhost:9000/light/1/random/30
+    curl -X POST http://localhost:9000/light/1/random/3
 
 ### Cycle colours around a room/zone
 
@@ -70,7 +70,7 @@ Cycle colours in group 1, immediately
 
 Cycle colours in group 1, taking 5 seconds to change
 
-    curl -X POST http://localhost:9000/group/1/cycle/50
+    curl -X POST http://localhost:9000/group/1/cycle/5
 
 ## Background tasks
 

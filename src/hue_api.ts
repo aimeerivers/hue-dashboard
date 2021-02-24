@@ -2,6 +2,7 @@ import http from 'http';
 import {Groups, Light, Lights, Scene, Scenes} from './hue_api_types';
 
 export const TRANSITION_TIME_UNITS_PER_SECOND = 10;
+export const TRANSITION_TIME_SECONDS_DEFAULT = 0.4;
 
 export const getGroups = () =>
   request('GET', '/groups', {}) as Promise<Groups>;

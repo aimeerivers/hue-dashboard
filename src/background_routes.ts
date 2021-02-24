@@ -17,7 +17,7 @@ export const addTo = (app: express.Application) => {
         const body = req.body;
 
         const type = body.type;
-        if (type !== 'random-different' && type !== 'random-same') return res.sendStatus(400);
+        if (type !== 'random-different' && type !== 'random-same' && type != 'cycle') return res.sendStatus(400);
 
         const lightIds = body.lightIds;
         if (!Array.isArray(lightIds)) return res.sendStatus(400);

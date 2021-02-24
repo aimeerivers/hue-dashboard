@@ -100,6 +100,13 @@ Set lights 1 and 2 to (probably) different random colours, every second, immedia
       -d '{"type": "random-different", "lightIds": [1, 2]}' \
       http://localhost:9000/background
 
+Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with a long, continuous fade
+
+    curl -X POST -H \
+      "Content-Type: application/json" \
+      -d '{"type": "cycle", "lightIds": [1, 2, 3], "interval": 30000, "transitiontime": 300}' \
+      http://localhost:9000/background
+
 ### List background tasks
 
 Get a list of background tasks that are currently running

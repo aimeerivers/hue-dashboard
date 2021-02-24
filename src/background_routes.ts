@@ -22,14 +22,20 @@ export const addTo = (app: express.Application) => {
         const lightIds = body.lightIds;
         if (!Array.isArray(lightIds)) return res.sendStatus(400);
 
+        let transitionTimeSeconds = body.transitionTimeSeconds;
+        if (typeof transitionTimeSeconds !== 'number') transitionTimeSeconds = 0;
+
+        let intervalSeconds = body.intervalSeconds;
+        if (typeof intervalSeconds !== 'number') intervalSeconds = 1;
+
         HueAPI.getLights().then(lights => {
             if (!lightIds.every(lightId => lights[lightId])) return res.sendStatus(400);
 
             const taskId = putBackgroundTask({
                 type,
                 lightIds,
-                transitiontime: body['transitiontime'] || 0,
-                interval: body['interval'] || 1000,
+                transitionTimeSeconds,
+                intervalSeconds,
             });
 
             const config = getBackgroundTasks().get(taskId);

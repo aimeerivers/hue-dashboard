@@ -110,7 +110,7 @@ const tick = (taskId: string) => {
     if (!task) return;
 
     if (task.type == "random-different" || task.type == "random-same") {
-        var xy = null;
+        let xy = null;
 
         Promise.all(
             task.config.lightIds.map(lightId => {

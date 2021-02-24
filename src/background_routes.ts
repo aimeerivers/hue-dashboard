@@ -44,7 +44,7 @@ export const addTo = (app: express.Application) => {
         res.sendStatus(204);
     });
 
-    app.delete('/background', (req, res) => {
+    app.delete('/background', (_req, res) => {
         for (const task of getBackgroundTasks().keys()) {
             deleteBackgroundTask(task);
         }

@@ -14,11 +14,11 @@ export function rgbToXy(red, green, blue): [number, number] {
   }
   else blue = (blue / 12.92);
 
-  var X = red * 0.664511 + green * 0.154324 + blue * 0.162028;
-  var Y = red * 0.283881 + green * 0.668433 + blue * 0.047685;
-  var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
-  var x = X / (X + Y + Z);
-  var y = Y / (X + Y + Z);
+  const X = red * 0.664511 + green * 0.154324 + blue * 0.162028;
+  const Y = red * 0.283881 + green * 0.668433 + blue * 0.047685;
+  const Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
+  const x = X / (X + Y + Z);
+  const y = Y / (X + Y + Z);
   return [x, y];
 }
 
@@ -34,22 +34,22 @@ function rgbToHex(red, green, blue) {
 }
 
 export function xyBriToHex(x, y, bri) {
-  let rgb = xyBriToRgb(x, y, bri);
+  const rgb = xyBriToRgb(x, y, bri);
   return rgbToHex(rgb.r, rgb.g, rgb.b);
 }
 
 function xyBriToRgb(x, y, bri) {
-  let z = 1.0 - x - y;
-  let Y = bri / 255.0; // Brightness of lamp
-  let X = (Y / y) * x;
-  let Z = (Y / y) * z;
+  const z = 1.0 - x - y;
+  const Y = bri / 255.0; // Brightness of lamp
+  const X = (Y / y) * x;
+  const Z = (Y / y) * z;
   let r = X * 1.612 - Y * 0.203 - Z * 0.302;
   let g = -X * 0.509 + Y * 1.412 + Z * 0.066;
   let b = X * 0.026 - Y * 0.072 + Z * 0.962;
   r = r <= 0.0031308 ? 12.92 * r : (1.0 + 0.055) * Math.pow(r, (1.0 / 2.4)) - 0.055;
   g = g <= 0.0031308 ? 12.92 * g : (1.0 + 0.055) * Math.pow(g, (1.0 / 2.4)) - 0.055;
   b = b <= 0.0031308 ? 12.92 * b : (1.0 + 0.055) * Math.pow(b, (1.0 / 2.4)) - 0.055;
-  let maxValue = Math.max(r,g,b);
+  const maxValue = Math.max(r,g,b);
   r /= maxValue;
   g /= maxValue;
   b /= maxValue;
@@ -62,12 +62,12 @@ function xyBriToRgb(x, y, bri) {
 }
 
 export function ctToHex(ct) {
-  let rgb = ctToRgb(ct);
+  const rgb = ctToRgb(ct);
   return rgbToHex(rgb.r, rgb.g, rgb.b);
 }
 
 function ctToRgb(ct) {
-  let kelvin = (10 ** 6) / ct / 100;
+  const kelvin = (10 ** 6) / ct / 100;
   let r, g, b;
 
   // Red

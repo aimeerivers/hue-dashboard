@@ -4,7 +4,7 @@ set -eu
 
 yarn
 yarn build
-yarn lint || :
+yarn lint
 
 [ -f .env ] && source .env
 

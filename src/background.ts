@@ -1,18 +1,19 @@
 import * as HueAPI from './hue_api';
 import * as Conversions from './conversions';
+import {TRANSITION_TIME_UNITS_PER_SECOND} from "./hue_api";
 
 type BackgroundTaskConfigCycle = {
     type: "cycle";
     lightIds: string[];
-    transitiontime: number;
-    interval: number;
+    transitionTimeSeconds: number;
+    intervalSeconds: number;
 };
 
 type BackgroundTaskConfigRandom = {
     type: "random-different" | "random-same";
     lightIds: string[];
-    transitiontime: number;
-    interval: number;
+    transitionTimeSeconds: number;
+    intervalSeconds: number;
 };
 
 type BackgroundTaskDetailsCycle = {
@@ -71,13 +72,13 @@ const createTask = (taskId: string, config: BackgroundTaskConfig): BackgroundTas
     if (config.type === 'random-different' || config.type === 'random-same') {
         return {
             type: config.type,
-            timer: setInterval(tick, config.interval, taskId),
+            timer: setInterval(tick, config.intervalSeconds * 1000, taskId),
             config,
         };
     } else if (config.type === 'cycle') {
         const details: BackgroundTaskDetailsCycle = {
             type: config.type,
-            timer: setInterval(tick, config.interval, taskId),
+            timer: setInterval(tick, config.intervalSeconds * 1000, taskId),
             config,
             executionCount: 0,
         };
@@ -120,7 +121,7 @@ const tick = (taskId: string) => {
 
                 const state = {
                     xy: thisXY,
-                    transitiontime: task.config.transitiontime,
+                    transitiontime: task.config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
                 };
 
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
@@ -138,7 +139,7 @@ const tick = (taskId: string) => {
             task.config.lightIds.map((lightId, index) => {
                 const state = {
                     xy: task.colours[index].xy,
-                    transitiontime: task.config.transitiontime,
+                    transitiontime: task.config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
                 };
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
             })

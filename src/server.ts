@@ -7,6 +7,7 @@ import {Group} from "./hue_api_types";
 import {drawSceneColours} from './pictures';
 import * as BackgroundRoutes from "./background_routes";
 import * as ProxyRoutes from "./proxy_routes";
+import {TRANSITION_TIME_SECONDS_DEFAULT, TRANSITION_TIME_UNITS_PER_SECOND} from "./hue_api";
 
 const STANDARD_SCENES = [
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715', // Blomstrende forår
@@ -120,9 +121,8 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) =>
 );
 
 app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
-  let transitionTime;
-  if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (isNaN(transitionTime)) transitionTime = 4;
+  let transitionTimeSeconds = parseFloat(req.params.time);
+  if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;
 
   const lightId = parseInt(req.params.lightId);
 
@@ -132,14 +132,18 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
     parseInt(req.params.b),
   );
 
-  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+  const state = {
+    xy,
+    transitiontime: transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
+  };
+
+  HueAPI.request('PUT', `/lights/${lightId}/state`, state)
     .then(() => res.sendStatus(200));
 });
 
 app.post('/light/:lightId/random/:time?', (req, res) => {
-  let transitionTime;
-  if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (isNaN(transitionTime)) transitionTime = 4;
+  let transitionTimeSeconds = parseFloat(req.params.time);
+  if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;
 
   const lightId = parseInt(req.params.lightId);
   const r = Math.floor(Math.random() * 255);
@@ -147,7 +151,12 @@ app.post('/light/:lightId/random/:time?', (req, res) => {
   const b = Math.floor(Math.random() * 255);
   const xy = Conversions.rgbToXy(r, g, b);
 
-  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+  const state = {
+    xy,
+    transitiontime: transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
+  };
+
+  HueAPI.request('PUT', `/lights/${lightId}/state`, state)
     .then(() => res.sendStatus(200));
 });
 
@@ -156,9 +165,8 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
     HueAPI.request('GET', `/groups/${req.params.groupId}`, {}) as Promise<Group>,
     HueAPI.getLights(),
   ]).then(([group, allLights]) => {
-    let transitionTime;
-    if(req.params.time) transitionTime = parseInt(req.params.time);
-    if (isNaN(transitionTime)) transitionTime = 4;
+    let transitionTimeSeconds = parseFloat(req.params.time);
+    if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;
 
     const colourLightIdsInThisGroup = group.lights
       .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
@@ -168,7 +176,11 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
       colourLightIdsInThisGroup.map((lightId, index) => {
         const nextLightId = colourLightIdsInThisGroup[(index + 1) % colourLightIdsInThisGroup.length];
         const xy = allLights[nextLightId].state.xy;
-        HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime});
+        const state = {
+          xy,
+          "transitiontime": transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
+        };
+        HueAPI.request('PUT', `/lights/${lightId}/state`, state);
       })
     );
   }).then(() => {

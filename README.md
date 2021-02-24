@@ -42,7 +42,7 @@ Set light 1 to yellow, immediately
 
 Set light 1 to green, taking 3 seconds to change
 
-    curl -X POST http://localhost:9000/light/14/rgb/0/255/0/30
+    curl -X POST http://localhost:9000/light/14/rgb/0/255/0/3
 
 ### Random colours
 
@@ -56,7 +56,7 @@ Set light 1 to a random colour, immediately
 
 Set light 1 to a random colour, taking 3 seconds to change
 
-    curl -X POST http://localhost:9000/light/1/random/30
+    curl -X POST http://localhost:9000/light/1/random/3
 
 ### Cycle colours around a room/zone
 
@@ -70,7 +70,7 @@ Cycle colours in group 1, immediately
 
 Cycle colours in group 1, taking 5 seconds to change
 
-    curl -X POST http://localhost:9000/group/1/cycle/50
+    curl -X POST http://localhost:9000/group/1/cycle/5
 
 ## Background tasks
 
@@ -90,7 +90,7 @@ Set lights 1 and 2 to (the same) random colour, every 5 seconds, taking 3 second
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-same", "lightIds": [1, 2], "interval": 5000, "transitiontime": 30}' \
+      -d '{"type": "random-same", "lightIds": [1, 2], "intervalSeconds": 5, "transitionTimeSeconds": 3}' \
       http://localhost:9000/background
 
 Set lights 1 and 2 to (probably) different random colours, every second, immediately
@@ -113,7 +113,7 @@ Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with 
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "cycle", "lightIds": [1, 2, 3], "interval": 30000, "transitiontime": 300}' \
+      -d '{"type": "cycle", "lightIds": [1, 2, 3], "intervalSeconds": 30, "transitionTimeSeconds": 30}' \
       http://localhost:9000/background
 
 ### List background tasks

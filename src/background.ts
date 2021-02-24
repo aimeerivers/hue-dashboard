@@ -1,23 +1,43 @@
 import * as HueAPI from './hue_api';
 import * as Conversions from './conversions';
-import {Light} from "./hue_api_types";
 
-export type BackgroundTaskConfig = {
+type BackgroundTaskConfigCycle = {
+    type: "cycle";
+    lightIds: string[];
+    transitiontime: number;
+    interval: number;
+};
+
+type BackgroundTaskConfigRandom = {
     type: "random-different" | "random-same";
     lightIds: string[];
     transitiontime: number;
     interval: number;
 };
 
+type BackgroundTaskDetailsCycle = {
+    type: "cycle";
+    timer: NodeJS.Timeout;
+    config: BackgroundTaskConfigCycle;
+    colours?: { xy: [number, number] }[];
+    executionCount: number;
+};
+
+type BackgroundTaskDetailsRandom = {
+    type: "random-different" | "random-same";
+    timer: NodeJS.Timeout;
+    config: BackgroundTaskConfigRandom;
+};
+
+export type BackgroundTaskConfig = BackgroundTaskConfigCycle | BackgroundTaskConfigRandom;
+
+type BackgroundTaskDetails = BackgroundTaskDetailsCycle | BackgroundTaskDetailsRandom;
+
 let nextId = 0;
 
 const tasksByLight: Map<string, string> = new Map();
 
-const backgroundTasks: Map<string, {
-    timer: NodeJS.Timeout;
-    initialLight?: Light;
-    config: BackgroundTaskConfig;
-}> = new Map();
+const backgroundTasks: Map<string, BackgroundTaskDetails> = new Map();
 
 export const getBackgroundTasks = ():Map<string, BackgroundTaskConfig> => {
     const map = new Map();
@@ -40,14 +60,38 @@ export const putBackgroundTask = (config: BackgroundTaskConfig): string | null =
 
     console.log("set task", { taskId, config });
 
-    backgroundTasks.set(taskId, {
-        timer: setInterval(tick, config.interval, taskId),
-        config: config
-    });
-
+    const details = createTask(taskId, config);
+    backgroundTasks.set(taskId, details);
     config.lightIds.forEach(lightId => tasksByLight.set(lightId, taskId));
 
     return taskId;
+};
+
+const createTask = (taskId: string, config: BackgroundTaskConfig): BackgroundTaskDetails => {
+    if (config.type === 'random-different' || config.type === 'random-same') {
+        return {
+            type: config.type,
+            timer: setInterval(tick, config.interval, taskId),
+            config,
+        };
+    } else if (config.type === 'cycle') {
+        const details: BackgroundTaskDetailsCycle = {
+            type: config.type,
+            timer: setInterval(tick, config.interval, taskId),
+            config,
+            executionCount: 0,
+        };
+
+        HueAPI.getLights().then(lights => {
+            details.colours = config.lightIds.map(lightId =>
+                ({
+                    xy: lights[lightId].state.xy || [0, 0],
+                })
+            );
+        });
+
+        return details;
+    }
 };
 
 export const deleteBackgroundTask = (taskId: string) => {
@@ -65,7 +109,7 @@ const tick = (taskId: string) => {
     const task = backgroundTasks.get(taskId);
     if (!task) return;
 
-    if (task.config.type == "random-different" || task.config.type == "random-same") {
+    if (task.type == "random-different" || task.type == "random-same") {
         var xy = null;
 
         Promise.all(
@@ -79,6 +123,23 @@ const tick = (taskId: string) => {
                     transitiontime: task.config.transitiontime,
                 };
 
+                return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
+            })
+        ).catch(e => console.log({ task: "failed", taskId, e }));
+    } else if (task.type === 'cycle') {
+        if (!task.colours) return;
+
+        task.colours.push(task.colours.shift());
+        task.executionCount++;
+
+        console.log({ taskId, executionCount: task.executionCount, colours: task.colours });
+
+        Promise.all(
+            task.config.lightIds.map((lightId, index) => {
+                const state = {
+                    xy: task.colours[index].xy,
+                    transitiontime: task.config.transitiontime,
+                };
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
             })
         ).catch(e => console.log({ task: "failed", taskId, e }));

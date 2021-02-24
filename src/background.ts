@@ -71,13 +71,13 @@ const createTask = (taskId: string, config: BackgroundTaskConfig): BackgroundTas
     if (config.type === 'random-different' || config.type === 'random-same') {
         return {
             type: config.type,
-            timer: setInterval(tick, config.interval, taskId),
+            timer: setInterval(tick, config.interval * 1000, taskId),
             config,
         };
     } else if (config.type === 'cycle') {
         const details: BackgroundTaskDetailsCycle = {
             type: config.type,
-            timer: setInterval(tick, config.interval, taskId),
+            timer: setInterval(tick, config.interval * 1000, taskId),
             config,
             executionCount: 0,
         };
@@ -120,7 +120,7 @@ const tick = (taskId: string) => {
 
                 const state = {
                     xy: thisXY,
-                    transitiontime: task.config.transitiontime,
+                    transitiontime: task.config.transitiontime * 10,
                 };
 
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
@@ -138,7 +138,7 @@ const tick = (taskId: string) => {
             task.config.lightIds.map((lightId, index) => {
                 const state = {
                     xy: task.colours[index].xy,
-                    transitiontime: task.config.transitiontime,
+                    transitiontime: task.config.transitiontime * 10,
                 };
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
             })

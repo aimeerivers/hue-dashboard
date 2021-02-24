@@ -122,7 +122,7 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) =>
 app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
   let transitionTime;
   if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (transitionTime === NaN) transitionTime = 4;
+  if (transitionTime === NaN) transitionTime = 0.4;
 
   const lightId = parseInt(req.params.lightId);
 
@@ -132,14 +132,14 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
     parseInt(req.params.b),
   );
 
-  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime * 10})
     .then(() => res.sendStatus(200));
 });
 
 app.post('/light/:lightId/random/:time?', (req, res) => {
   let transitionTime;
   if (req.params.time) transitionTime = parseInt(req.params.time);
-  if (transitionTime === NaN) transitionTime = 4;
+  if (transitionTime === NaN) transitionTime = 0.4;
 
   const lightId = parseInt(req.params.lightId);
   const r = Math.floor(Math.random() * 255);
@@ -147,7 +147,7 @@ app.post('/light/:lightId/random/:time?', (req, res) => {
   const b = Math.floor(Math.random() * 255);
   const xy = Conversions.rgbToXy(r, g, b);
 
-  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime})
+  HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime * 10})
     .then(() => res.sendStatus(200));
 });
 
@@ -158,7 +158,7 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
   ]).then(([group, allLights]) => {
     let transitionTime;
     if(req.params.time) transitionTime = parseInt(req.params.time);
-    if(transitionTime === NaN) transitionTime = 4;
+    if(transitionTime === NaN) transitionTime = 0.4;
     const colourLightIdsInThisGroup = group.lights
       .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
       .sort();
@@ -167,7 +167,7 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
       colourLightIdsInThisGroup.map((lightId, index) => {
         const nextLightId = colourLightIdsInThisGroup[(index + 1) % colourLightIdsInThisGroup.length];
         const xy = allLights[nextLightId].state.xy;
-        HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime});
+        HueAPI.request('PUT', `/lights/${lightId}/state`, {"xy": xy, "transitiontime": transitionTime * 10});
       })
     );
   }).then(() => {

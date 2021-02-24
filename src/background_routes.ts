@@ -29,7 +29,7 @@ export const addTo = (app: express.Application) => {
                 type,
                 lightIds,
                 transitiontime: body['transitiontime'] || 0,
-                interval: body['interval'] || 1000,
+                interval: body['interval'] || 1,
             });
 
             const config = getBackgroundTasks().get(taskId);

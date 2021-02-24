@@ -5,7 +5,8 @@ import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
 import {drawSceneColours} from './pictures';
-import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask} from "./background";
+import * as BackgroundRoutes from "./background_routes";
+import * as ProxyRoutes from "./proxy_routes";
 
 const STANDARD_SCENES = [
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715', // Blomstrende forår
@@ -174,53 +175,6 @@ app.post('/group/:groupId/cycle/:time?', (req, res) =>
   })
 );
 
-app.get('/background', (_req, res) => {
-  const answer = {};
-  for (const [taskId, config] of getBackgroundTasks()) {
-    answer[taskId] = config;
-  }
-  res.status(200).send(answer);
-});
-
-app.post('/background', (req, res) => {
-  const body = req.body;
-
-  const type = body.type;
-  if (type !== 'random-different' && type !== 'random-same') return res.sendStatus(400);
-
-  const lightIds = body.lightIds;
-  if (!Array.isArray(lightIds)) return res.sendStatus(400);
-
-  HueAPI.getLights().then(lights => {
-    if (!lightIds.every(lightId => lights[lightId])) return res.sendStatus(400);
-
-    const taskId = putBackgroundTask({
-      type,
-      lightIds,
-      transitiontime: body['transitiontime'] || 0,
-      interval: body['interval'] || 1000,
-    });
-
-    const config = getBackgroundTasks().get(taskId);
-
-    res.send({ [taskId]: config });
-  });
-});
-
-app.delete('/background/:taskId', (req, res) => {
-  const taskId = req.params.taskId;
-  deleteBackgroundTask(taskId);
-  res.sendStatus(204);
-});
-
-app.delete('/background', (req, res) => {
-  for (const task of getBackgroundTasks().keys()) {
-    deleteBackgroundTask(task);
-  }
-
-  res.sendStatus(204);
-});
-
 app.put('/clock', (req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }
   // if(req.body.months) { updateLight(12, req.body.months.rgb); }
@@ -268,6 +222,9 @@ function updateLight(id, value) {
 
   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
 }
+
+BackgroundRoutes.addTo(app);
+ProxyRoutes.addTo(app);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);

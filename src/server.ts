@@ -6,6 +6,7 @@ import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
 import {drawSceneColours} from './pictures';
 import * as BackgroundRoutes from "./background_routes";
+import * as ProxyRoutes from "./proxy_routes";
 
 const STANDARD_SCENES = [
   'adfa9c3e-e9aa-4b65-b9d3-c5b2c0576715', // Blomstrende forår
@@ -223,6 +224,7 @@ function updateLight(id, value) {
 }
 
 BackgroundRoutes.addTo(app);
+ProxyRoutes.addTo(app);
 
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Hue controller webapp",
   "author": "Aimee Rivers <aimee@aimeerivers.com>",
+  "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/server.js",

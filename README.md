@@ -108,9 +108,9 @@ Get a list of background tasks that are currently running
 
 ### Stop background tasks
 
-Stop the background task currently running on light 1
+Stop the background task with id 1
 
-    curl -X DELETE http://localhost:9000/background/light/1
+    curl -X DELETE http://localhost:9000/background/1
 
 Stop all background tasks
 

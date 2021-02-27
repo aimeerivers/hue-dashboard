@@ -1,6 +1,7 @@
-import {validateIntervalSeconds, validateLightIds, validateTransitionTimeSeconds} from "./common";
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
+import {validateIntervalSeconds, validateLightIds, validateTransitionTimeSeconds} from "./common";
+import {Base, BaseFactory} from "./base";
 import {randomXY} from "./colour_tools";
 
 const TYPE = "random-same";
@@ -10,56 +11,85 @@ export type Config = {
     lightIds: string[];
     transitionTimeSeconds: number;
     intervalSeconds: number;
-
-    details: {
-        timer: NodeJS.Timeout;
-    };
 };
 
-export const validatePublic = (config: any): Omit<Config, "details"> | undefined => {
-    if (config.type !== TYPE) return;
+export type State = {
+    timer: NodeJS.Timeout;
+}
 
-    const lightIds = validateLightIds(config.lightIds);
-    if (!lightIds) return;
+export class Builder extends BaseFactory<Config, Task> {
 
-    const transitionTimeSeconds = validateTransitionTimeSeconds(config.transitionTimeSeconds);
-    if (transitionTimeSeconds === undefined) return;
+    validate(config: any) {
+        if (config.type !== TYPE) return;
 
-    const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
-    if (intervalSeconds === undefined) return;
+        const lightIds = validateLightIds(config.lightIds);
+        if (!lightIds) return;
 
-    return {
-        type: TYPE,
-        lightIds,
-        transitionTimeSeconds,
-        intervalSeconds,
-    };
-};
+        const transitionTimeSeconds = validateTransitionTimeSeconds(config.transitionTimeSeconds);
+        if (transitionTimeSeconds === undefined) return;
 
-export const createTask = (taskId: string, config: Omit<Config, "details">): [Config, () => void] => {
-    const task: Config = {
-        ...config,
-        details: {
-            timer: setInterval(tick, config.intervalSeconds * 1000, taskId),
-        },
-    };
+        const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
+        if (intervalSeconds === undefined) return;
 
-    return [task, () => deleteTask(taskId, task)];
-};
+        const c: Config = {
+            type: TYPE,
+            lightIds,
+            transitionTimeSeconds,
+            intervalSeconds,
+        };
 
-const deleteTask = (taskId: string, config: Config) => {
-    clearInterval(config.details.timer);
-};
+        return {
+            build: (taskId: string) => new Task(taskId, c),
+        };
+    }
 
-const tick = (taskId: string, task: Config) => {
-    const state = {
-        xy: randomXY(),
-        transitiontime: task.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
-    };
+    build(taskId: string, config: Config): Task {
+        return new Task(taskId, config);
+    }
 
-    Promise.all(
-        task.lightIds.map((lightId, index) =>
-            HueAPI.request('PUT', `/lights/${lightId}/state`, state)
-        )
-    ).catch(e => console.log({ task: "failed", taskId, e }));
-};
+}
+
+export class Task extends Base<Config> {
+
+    public readonly taskId: string;
+    public readonly config: Config;
+    private readonly state: State;
+
+    constructor(taskId: string, config: Config) {
+        super(taskId);
+
+        this.config = config;
+        const state = this.initialState();
+        this.state = state;
+    }
+
+    private initialState(): State {
+        return {
+            timer: setInterval(
+                () => this.tick(),
+                this.config.intervalSeconds * 1000,
+            ),
+        };
+    }
+
+    public stopTask() {
+        clearInterval(this.state.timer);
+    }
+
+    private tick() {
+        const taskId = this.taskId;
+        const config = this.config;
+
+        const lightState = {
+            xy: randomXY(),
+            transitiontime: config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
+        };
+
+        Promise.all(
+            config.lightIds.map(lightId =>
+                HueAPI.request('PUT', `/lights/${lightId}/state`, lightState)
+            )
+        ).catch(e => console.log({ task: "failed", taskId, e }));
+    }
+
+}

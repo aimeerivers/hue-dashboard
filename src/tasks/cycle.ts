@@ -10,16 +10,16 @@ export type Config = {
     lightIds: string[];
     transitionTimeSeconds: number;
     intervalSeconds: number;
-
-    details: {
-        timer: NodeJS.Timeout;
-        colours?: { xy: [number, number] }[];
-    };
 };
+
+export type State = {
+    timer: NodeJS.Timeout;
+    colours?: { xy: [number, number] }[];
+}
 
 export class Builder extends BaseFactory<Config, Task> {
 
-    validate(config: any): Omit<Config, "details"> | undefined {
+    validate(config: any) {
         if (config.type !== TYPE) return;
 
         const lightIds = validateLightIds(config.lightIds);
@@ -31,15 +31,19 @@ export class Builder extends BaseFactory<Config, Task> {
         const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
         if (intervalSeconds === undefined) return;
 
-        return {
+        const c: Config = {
             type: TYPE,
             lightIds,
             transitionTimeSeconds,
             intervalSeconds,
         };
+
+        return {
+            build: (taskId: string) => new Task(taskId, c),
+        };
     }
 
-    build(taskId: string, config: Omit<Config, "details">): Task {
+    build(taskId: string, config: Config): Task {
         return new Task(taskId, config);
     }
 
@@ -49,51 +53,53 @@ export class Task extends Base<Config> {
 
     public readonly taskId: string;
     public readonly config: Config;
+    private readonly state: State;
 
-    constructor(taskId: string, config: Omit<Config, "details">) {
-        super();
+    constructor(taskId: string, config: Config) {
+        super(taskId);
 
-        const task: Config = {
-            ...config,
-            details: {
-                timer: setInterval(
-                    () => this.tick(),
-                    config.intervalSeconds * 1000, taskId,
-                ),
-            },
-        };
+        this.config = config;
+        const state = this.initialState();
+        this.state = state;
 
         HueAPI.getLights().then(lights => {
-            task.details.colours = config.lightIds.map(lightId =>
+            state.colours = config.lightIds.map(lightId =>
                 ({
                     xy: lights[lightId].state.xy || [0, 0],
                 })
             );
         });
-
-        this.taskId = taskId;
-        this.config = task;
     }
 
-    stopTask() {
-        clearInterval(this.config.details.timer);
+    private initialState(): State {
+        return {
+            timer: setInterval(
+                () => this.tick(),
+                this.config.intervalSeconds * 1000,
+            ),
+        };
+    }
+
+    public stopTask() {
+        clearInterval(this.state.timer);
     }
 
     private tick() {
         const taskId = this.taskId;
-        const task = this.config;
-        if (!task.details.colours) return;
+        const config = this.config;
+        const state = this.state;
+        if (!state.colours) return;
 
-        task.details.colours.push(task.details.colours.shift());
-        console.log({ taskId, colours: task.details.colours });
+        state.colours.push(state.colours.shift());
+        console.log({ taskId, colours: state.colours });
 
         Promise.all(
-            task.lightIds.map((lightId, index) => {
-                const state = {
-                    xy: task.details.colours[index].xy,
-                    transitiontime: task.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
+            config.lightIds.map((lightId, index) => {
+                const lightState = {
+                    xy: state.colours[index].xy,
+                    transitiontime: config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
                 };
-                return HueAPI.request('PUT', `/lights/${lightId}/state`, state);
+                return HueAPI.request('PUT', `/lights/${lightId}/state`, lightState);
             })
         ).catch(e => console.log({ task: "failed", taskId, e }));
     }

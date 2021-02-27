@@ -1,74 +1,62 @@
-import * as fs from "fs";
-
-import * as HueAPI from './hue_api';
-import * as Conversions from './conversions';
-import {TRANSITION_TIME_UNITS_PER_SECOND} from "./hue_api";
-
+import * as Noop from './tasks/noop';
 import * as Cycle from './tasks/cycle';
-import * as RandomDifferent from './tasks/random_different';
 import * as RandomSame from './tasks/random_same';
-
-export type BackgroundTaskConfig = Cycle.Config | RandomDifferent.Config | RandomSame.Config;
-export type PublicBackgroundTaskConfig = Omit<BackgroundTaskConfig, "details">;
+import * as RandomDifferent from './tasks/random_different';
+import {Base} from "./tasks/base";
 
 let nextId = 0;
 
-const backgroundTasks: Map<string, BackgroundTaskConfig> = new Map();
+const backgroundTasks: Map<string, Base<unknown>> = new Map();
 
-// export const TASK_TYPES = [
-//     Cycle,
-//     RandomDifferent,
-//     RandomSame,
-// ];
+export const getBackgroundTasks = ():Map<string, any> => {
+    const map = new Map<string, any>();
 
-export const getBackgroundTasks = ():Map<string, PublicBackgroundTaskConfig> => {
-    const map = new Map<string, PublicBackgroundTaskConfig>();
-
-    for (const [taskId, config] of backgroundTasks.entries()) {
-        const publicConfig = {...config};
-        delete publicConfig.details;
-        map.set(taskId, publicConfig);
+    for (const task of backgroundTasks.values()) {
+        map.set(task.taskId, task.config);
     }
 
     return map;
 };
 
-export const putBackgroundTask = (config: PublicBackgroundTaskConfig): string | null => {
-    // TODO: reject duplicate light IDs
-    // TODO: reject invalid light IDs
-    // TODO: reject zero light IDs
-    if (config.lightIds.some(lightId => tasksByLight.has(lightId))) return null;
+export const putBackgroundTask = (config: any): string | null => {
+    const task = createTask(config);
+    if (!task) return;
 
+    backgroundTasks.set(task.taskId, task);
+    return task.taskId;
+};
+
+const createTask = (config: any): Base<unknown> | undefined => {
+    const handlers = [
+        new Noop.Builder(),
+        new Cycle.Builder(),
+        new RandomSame.Builder(),
+        new RandomDifferent.Builder(),
+    ];
+
+    for (const handler of handlers) {
+        const validated = handler.validate(config);
+
+        if (validated) return validated.build(getTaskId());
+    }
+};
+
+const getTaskId = (): string => {
     let taskId: string;
+
     for (;;) {
         ++nextId;
         taskId = nextId.toString();
         if (!backgroundTasks.has(taskId)) break;
     }
 
-    console.log("set task", { taskId, config });
-
-    const details = createTask(taskId, config);
-    backgroundTasks.set(taskId, details);
-    config.lightIds.forEach(lightId => tasksByLight.set(lightId, taskId));
-
     return taskId;
-};
-
-const createTask = (taskId: string, config: BackgroundTaskConfig): BackgroundTaskDetails => {
 };
 
 export const deleteBackgroundTask = (taskId: string) => {
     const task = backgroundTasks.get(taskId);
     if (!task) return;
 
-    console.log("delete task", { taskId, task });
-
-
-    clearInterval(task.timer);
-    task.config.lightIds.forEach(lightId => tasksByLight.delete(lightId));
+    task.stopTask();
     backgroundTasks.delete(taskId);
-
-    persist();
 };
-

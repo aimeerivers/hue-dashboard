@@ -4,16 +4,25 @@ html(lang='en')
     meta(charset='UTF-8')
     link(rel="stylesheet" href="/css/styles.css")
     title #{title}
-  body
+  body.dashboard
     h1#myHeading #{title}
 
-    each room in rooms
-      div
-        h2.room(data-colour=room.colour) #{room.name}
-        input(class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
-        br
-        each scene in room.scenes
-          img.scene(src=scene.imageUrl title=scene.name data-room-id=room.id data-scene-id=scene.id)
+    div.rooms
+      each room in rooms
+        div.room
+          input(class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
+          h2.room-name #{room.name}
+
+          .room-image &nbsp;
+          .room-overlay(data-colour=room.colour) &nbsp;
+
+          if !room.state.any_on
+            .room-off-overlay &nbsp;
+
+          .scene-container
+            .scenes
+              each scene in room.scenes
+                img.scene-image(src=scene.imageUrl title=scene.name data-room-id=room.id data-scene-id=scene.id)
 
 
   script(src='/js/app.js')

@@ -1,4 +1,81 @@
-img.scene {
+* {
+  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.dashboard {
+  padding: 1rem;
+}
+
+.rooms {
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  grid-gap: 1.5rem;
+}
+
+.room {
+  border: 1px solid #888;
+  border-radius: 1rem;
+  color: white;
+  height: 20rem;
+  box-shadow: 1px 1px 10px #CCC;
+  position: relative;
+}
+
+.on-off {
+  float: right;
+  margin: 1.5rem;
+}
+
+h2.room-name {
+  color: black;
+  border-bottom: 1px solid #888;
+  padding: 1rem;
+  margin-top: 0;
+  height: 24px;
+}
+
+.room-image, .room-overlay, .room-off-overlay {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  height: 190px;
+  width: 100%;
+}
+
+.room-overlay {
+  opacity: 15%;
+}
+
+.room-off-overlay {
+  background-color: black;
+  opacity: 20%;
+}
+
+.scene-container {
+  padding: 10px 0;
+  height: 55px;
+  width: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.scenes {
+  white-space: nowrap;
+}
+
+img.scene-image:nth-child(1) {
+  margin-left: 10px;
+}
+
+img.scene-image:nth-last-child(1) {
+  margin-right: 10px;
+}
+
+img.scene-image {
   width: 40px;
   height: 40px;
   margin: 3px;
@@ -9,7 +86,7 @@ img.scene {
   cursor: pointer;
 }
 
-img.scene:hover {
+img.scene-image:hover {
   margin-bottom: 2px;
   box-shadow: 1px 1px 8px #888;
 }

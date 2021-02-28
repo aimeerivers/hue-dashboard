@@ -1,6 +1,6 @@
 let checkboxes = document.getElementsByClassName('on-off');
-let rooms = document.getElementsByClassName('room');
-let scenes = document.getElementsByClassName('scene');
+let roomOverlays = document.getElementsByClassName('room-overlay');
+let sceneImages = document.getElementsByClassName('scene-image');
 
 var onOff = function() {
   var roomId = this.getAttribute("data-room-id");
@@ -24,10 +24,10 @@ for (var i = 0; i < checkboxes.length; i++) {
   checkboxes[i].addEventListener('change', onOff, false);
 }
 
-for (var i = 0; i < rooms.length; i++) {
-  rooms[i].style.backgroundColor = rooms[i].getAttribute("data-colour");
+for (var i = 0; i < roomOverlays.length; i++) {
+  roomOverlays[i].style.backgroundColor = roomOverlays[i].getAttribute("data-colour");
 }
 
-for (var i = 0; i < scenes.length; i++) {
-  scenes[i].addEventListener('click', setScene, false);
+for (var i = 0; i < sceneImages.length; i++) {
+  sceneImages[i].addEventListener('click', setScene, false);
 }

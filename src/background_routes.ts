@@ -1,6 +1,5 @@
 import express from 'express';
 
-import * as HueAPI from './hue_api';
 import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask} from "./background";
 
 export const addTo = (app: express.Application) => {
@@ -14,34 +13,11 @@ export const addTo = (app: express.Application) => {
     });
 
     app.post('/background', (req, res) => {
-        const body = req.body;
+        const taskId = putBackgroundTask(req.body);
+        if (!taskId) return res.sendStatus(400);
 
-        const type = body.type;
-        if (type !== 'random-different' && type !== 'random-same' && type != 'cycle') return res.sendStatus(400);
-
-        const lightIds = body.lightIds;
-        if (!Array.isArray(lightIds)) return res.sendStatus(400);
-
-        let transitionTimeSeconds = body.transitionTimeSeconds;
-        if (typeof transitionTimeSeconds !== 'number') transitionTimeSeconds = 0;
-
-        let intervalSeconds = body.intervalSeconds;
-        if (typeof intervalSeconds !== 'number') intervalSeconds = 1;
-
-        HueAPI.getLights().then(lights => {
-            if (!lightIds.every(lightId => lights[lightId])) return res.sendStatus(400);
-
-            const taskId = putBackgroundTask({
-                type,
-                lightIds,
-                transitionTimeSeconds,
-                intervalSeconds,
-            });
-
-            const config = getBackgroundTasks().get(taskId);
-
-            res.send({[taskId]: config});
-        });
+        const config = getBackgroundTasks().get(taskId);
+        res.send({[taskId]: config});
     });
 
     app.delete('/background/:taskId', (req, res) => {

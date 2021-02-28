@@ -19,7 +19,7 @@ export class Builder extends BaseFactory<Config, Task> {
         };
 
         return {
-            build: (taskId: string) => new Task(taskId, typedConfig),
+            build: (taskId: string, _state?: any) => new Task(taskId, typedConfig),
         };
     }
 
@@ -45,4 +45,9 @@ export class Task extends Base<Config> {
 
     public stopTask() {
     }
+
+    public save() {
+        return null;
+    }
+
 }

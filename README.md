@@ -82,7 +82,7 @@ Set light 1 to a random colour, every second, immediately
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-same", "lightIds": [1]}' \
+      -d '{"type": "random-same", "lightIds": ["1"]}' \
       http://localhost:9000/background
 
 
@@ -90,14 +90,14 @@ Set lights 1 and 2 to (the same) random colour, every 5 seconds, taking 3 second
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-same", "lightIds": [1, 2], "intervalSeconds": 5, "transitionTimeSeconds": 3}' \
+      -d '{"type": "random-same", "lightIds": ["1", "2"], "intervalSeconds": 5, "transitionTimeSeconds": 3}' \
       http://localhost:9000/background
 
 Set lights 1 and 2 to (probably) different random colours, every second, immediately
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-different", "lightIds": [1, 2]}' \
+      -d '{"type": "random-different", "lightIds": ["1", "2"]}' \
       http://localhost:9000/background
 
 ### Cycle colours
@@ -106,14 +106,14 @@ Cycle the colours of lights 1, 2, and 3 (to each other), every second, immediate
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "cycle", "lightIds": [1, 2, 3]}' \
+      -d '{"type": "cycle", "lightIds": ["1", "2", "3"]}' \
       http://localhost:9000/background
 
 Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with a long, continuous fade
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "cycle", "lightIds": [1, 2, 3], "intervalSeconds": 30, "transitionTimeSeconds": 30}' \
+      -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 30, "transitionTimeSeconds": 30}' \
       http://localhost:9000/background
 
 ### List background tasks

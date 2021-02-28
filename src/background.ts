@@ -1,8 +1,17 @@
-import * as Noop from './tasks/noop';
-import * as Cycle from './tasks/cycle';
-import * as RandomSame from './tasks/random_same';
-import * as RandomDifferent from './tasks/random_different';
+import fs from "fs";
+
 import {Base} from "./tasks/base";
+import * as Cycle from './tasks/cycle';
+import * as Noop from './tasks/noop';
+import * as RandomDifferent from './tasks/random_different';
+import * as RandomSame from './tasks/random_same';
+
+export const handlers = [
+    new Noop.Builder(),
+    new Cycle.Builder(),
+    new RandomSame.Builder(),
+    new RandomDifferent.Builder(),
+];
 
 let nextId = 0;
 
@@ -23,17 +32,11 @@ export const putBackgroundTask = (config: any): string | null => {
     if (!task) return;
 
     backgroundTasks.set(task.taskId, task);
+    saveAll();
     return task.taskId;
 };
 
 const createTask = (config: any): Base<unknown> | undefined => {
-    const handlers = [
-        new Noop.Builder(),
-        new Cycle.Builder(),
-        new RandomSame.Builder(),
-        new RandomDifferent.Builder(),
-    ];
-
     for (const handler of handlers) {
         const validated = handler.validate(config);
 
@@ -59,4 +62,56 @@ export const deleteBackgroundTask = (taskId: string) => {
 
     task.stopTask();
     backgroundTasks.delete(taskId);
+    saveAll();
 };
+
+const SAVE_FILE = "var/tasks.json";
+
+const saveAll = () => {
+    const data = {};
+
+    for (const task of backgroundTasks.values()) {
+        data[task.taskId] = {
+            config: task.config,
+            state: task.save(),
+        };
+    }
+
+    const tmpFile = SAVE_FILE + ".tmp";
+    fs.writeFileSync(tmpFile, JSON.stringify(data), {encoding: "utf-8"});
+    fs.renameSync(tmpFile, SAVE_FILE);
+};
+
+const restoreAll = () => {
+    let data: any = undefined;
+
+    try {
+        const text = fs.readFileSync(SAVE_FILE, {encoding: "utf-8"});
+        data = JSON.parse(text);
+    } catch (e) {
+        if (e.code !== 'ENOENT') throw e;
+    }
+
+    if (data === undefined) return;
+
+    for (const taskId of Object.keys(data)) {
+        const task = tryRestore(taskId, data[taskId].config, data[taskId].state);
+        if (task) backgroundTasks.set(task.taskId, task);
+    }
+};
+
+const tryRestore = (taskId: string, config: any, state: any): Base<any> | undefined => {
+    if (backgroundTasks.has(taskId)) return;
+
+    for (const handler of handlers) {
+        const validated = handler.validate(config);
+
+        if (validated) return validated.build(taskId, state);
+    }
+
+    return undefined;
+};
+
+// TODO: maybe a mechanism for periodic saving
+restoreAll();
+setInterval(() => backgroundTasks.size > 0 && saveAll(), 1000);

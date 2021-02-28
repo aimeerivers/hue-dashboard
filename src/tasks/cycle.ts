@@ -39,7 +39,7 @@ export class Builder extends BaseFactory<Config, Task> {
         };
 
         return {
-            build: (taskId: string) => new Task(taskId, c),
+            build: (taskId: string, state?: any) => new Task(taskId, c, state)
         };
     }
 
@@ -55,24 +55,39 @@ export class Task extends Base<Config> {
     public readonly config: Config;
     private readonly state: State;
 
-    constructor(taskId: string, config: Config) {
+    constructor(taskId: string, config: Config, restoreState?: any) {
         super(taskId);
 
         this.config = config;
-        const state = this.initialState();
-        this.state = state;
+        if (restoreState) this.state = this.restoreState(restoreState);
+        this.state ||= this.initialState();
+    }
+
+    private initialState(): State {
+        const state: State = {
+            timer: setInterval(
+                () => this.tick(),
+                this.config.intervalSeconds * 1000,
+            ),
+        };
 
         HueAPI.getLights().then(lights => {
-            state.colours = config.lightIds.map(lightId =>
+            state.colours = this.config.lightIds.map(lightId =>
                 ({
                     xy: lights[lightId].state.xy || [0, 0],
                 })
             );
         });
+
+        return state;
     }
 
-    private initialState(): State {
+    private restoreState(restore: any): State | undefined {
+        if (!Array.isArray(restore.colours)) return;
+        if (restore.colours.length !== this.config.lightIds.length) return;
+
         return {
+            colours: restore.colours,
             timer: setInterval(
                 () => this.tick(),
                 this.config.intervalSeconds * 1000,
@@ -82,6 +97,12 @@ export class Task extends Base<Config> {
 
     public stopTask() {
         clearInterval(this.state.timer);
+    }
+
+    public save() {
+        return {
+            colours: this.state.colours,
+        };
     }
 
     private tick() {

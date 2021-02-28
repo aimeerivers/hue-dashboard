@@ -7,10 +7,11 @@ export abstract class Base<C> {
     }
 
     public abstract stopTask();
+    public abstract save(): any;
 }
 
 export abstract class BaseFactory<C, T extends Base<C>> {
     abstract validate(config: any): {
-        build: (taskId: string) => T;
+        build: (taskId: string, state?: any) => T;
     } | undefined;
 }

@@ -39,7 +39,7 @@ export class Builder extends BaseFactory<Config, Task> {
         };
 
         return {
-            build: (taskId: string) => new Task(taskId, c),
+            build: (taskId: string, _state?: any) => new Task(taskId, c),
         };
     }
 
@@ -74,6 +74,10 @@ export class Task extends Base<Config> {
 
     public stopTask() {
         clearInterval(this.state.timer);
+    }
+
+    public save() {
+        return null;
     }
 
     private tick() {

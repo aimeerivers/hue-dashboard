@@ -10,14 +10,11 @@ html(lang='en')
     div.rooms
       each room in rooms
         div.room
-          input(class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
+          input(id="room-on-off-" + room.id class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
           h2.room-name #{room.name}
 
           .room-image &nbsp;
-          .room-overlay(data-colour=room.colour) &nbsp;
-
-          if !room.state.any_on
-            .room-off-overlay &nbsp;
+          .room-overlay(id="room-overlay-" + room.id) &nbsp;
 
           .scene-container
             .scenes

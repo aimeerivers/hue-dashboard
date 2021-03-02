@@ -3,53 +3,48 @@
 }
 
 .dashboard {
-  padding: 1rem;
+  padding: 20px;
 }
 
 .rooms {
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  grid-gap: 1.5rem;
+  grid-gap: 40px;
 }
 
 .room {
   border: 1px solid #888;
-  border-radius: 1rem;
+  border-radius: 14px;
   color: white;
-  height: 20rem;
+  height: 340px;
   box-shadow: 1px 1px 10px #CCC;
   position: relative;
 }
 
 .on-off {
   float: right;
-  margin: 1.5rem;
+  margin: 22px;
 }
 
 h2.room-name {
   color: black;
   border-bottom: 1px solid #888;
-  padding: 1rem;
+  padding: 16px;
   margin-top: 0;
   height: 24px;
 }
 
-.room-image, .room-overlay, .room-off-overlay {
+.room-image, .room-overlay {
   position: absolute;
   top: 56px;
   left: 0;
-  height: 190px;
+  height: 208px;
   width: 100%;
 }
 
 .room-overlay {
   opacity: 15%;
-}
-
-.room-off-overlay {
-  background-color: black;
-  opacity: 20%;
 }
 
 .scene-container {

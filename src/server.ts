@@ -4,6 +4,7 @@ import cors from 'cors';
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
+import * as Dashboard from './dashboard';
 import {drawSceneColours} from './pictures';
 import * as BackgroundRoutes from "./background_routes";
 import * as ProxyRoutes from "./proxy_routes";
@@ -54,7 +55,7 @@ app.get('/', (_req, res) => {
 
 app.get('/dashboard', (_req, res) => {
   const promiseRooms = HueAPI.getGroups().then(groups => {
-    const rooms = HueAPI.getRoomsFromGroups(groups);
+    const rooms = Dashboard.getRoomsFromGroups(groups);
     return rooms;
   });
 
@@ -85,7 +86,7 @@ app.get('/dashboard', (_req, res) => {
 
 app.get('/groups/state', (_req, res) => {
   HueAPI.getGroups().then(groups => {
-    const rooms = HueAPI.getRoomsFromGroups(groups);
+    const rooms = Dashboard.getRoomsFromGroups(groups);
     res.send(rooms);
   });
 });

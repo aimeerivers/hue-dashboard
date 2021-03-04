@@ -82,9 +82,8 @@ Set light 1 to a random colour, every second, immediately
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-same", "lightIds": ["1"]}' \
+      -d '{"type": "random-same", "lightIds": ["1"], "intervalSeconds": 1, "transitionTimeSeconds": 0}' \
       http://localhost:9000/background
-
 
 Set lights 1 and 2 to (the same) random colour, every 5 seconds, taking 3 seconds to change
 
@@ -97,7 +96,7 @@ Set lights 1 and 2 to (probably) different random colours, every second, immedia
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-different", "lightIds": ["1", "2"]}' \
+      -d '{"type": "random-different", "lightIds": ["1", "2"], "intervalSeconds": 1, "transitionTimeSeconds": 0}' \
       http://localhost:9000/background
 
 ### Cycle colours
@@ -106,7 +105,7 @@ Cycle the colours of lights 1, 2, and 3 (to each other), every second, immediate
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "cycle", "lightIds": ["1", "2", "3"]}' \
+      -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 1, "transitionTimeSeconds": 0}' \
       http://localhost:9000/background
 
 Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with a long, continuous fade

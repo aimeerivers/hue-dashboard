@@ -33,7 +33,7 @@ var updateState = function() {
   var getStateCall = new XMLHttpRequest();
   getStateCall.open("GET", "/groups/state", true);
   getStateCall.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
+    if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
       let response = JSON.parse(this.responseText);
       for(const groupId in response) {
         let group = response[groupId];

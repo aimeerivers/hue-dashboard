@@ -4,6 +4,7 @@ import cors from 'cors';
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Group} from "./hue_api_types";
+import * as Dashboard from './dashboard';
 import {drawSceneColours} from './pictures';
 import * as BackgroundRoutes from "./background_routes";
 import * as ProxyRoutes from "./proxy_routes";
@@ -54,29 +55,7 @@ app.get('/', (_req, res) => {
 
 app.get('/dashboard', (_req, res) => {
   const promiseRooms = HueAPI.getGroups().then(groups => {
-    const rooms = [];
-
-    for(const groupId in groups) {
-      const group = groups[groupId];
-      if(group.type == 'Room' || group.type == 'Zone') {
-        let colour = "";
-        if(group.state.any_on) {
-          if(group.action.xy && group.action.bri) {
-            colour = Conversions.xyBriToHex(group.action.xy[0], group.action.xy[1], group.action.bri);
-          } else if(group.action.colormode == 'ct') {
-            colour = Conversions.ctToHex(group.action.ct);
-          }
-        }
-        rooms.push({
-          id: groupId,
-          name: group.name,
-          state: group.state,
-          colour: colour,
-          scenes: []
-        });
-      }
-    }
-
+    const rooms = Dashboard.getRoomsFromGroups(groups);
     return rooms;
   });
 
@@ -88,6 +67,7 @@ app.get('/dashboard', (_req, res) => {
         let sceneImage = `/scene/${sceneId}.png`;
         if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
         if (room) {
+          room.scenes ||= [];
           room.scenes.push({
             id: sceneId,
             name: scene.name,
@@ -101,6 +81,13 @@ app.get('/dashboard', (_req, res) => {
       title: 'Hue Dashboard',
       rooms: rooms
     });
+  });
+});
+
+app.get('/groups/state', (_req, res) => {
+  HueAPI.getGroups().then(groups => {
+    const rooms = Dashboard.getRoomsFromGroups(groups);
+    res.send(rooms);
   });
 });
 

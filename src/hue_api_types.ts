@@ -29,6 +29,7 @@ export type Light = {
 export type Lights = Record<string, Light>
 
 export type Group = {
+    id: string;
     name: string;
     lights: string[];
     sensors: string[];
@@ -37,6 +38,7 @@ export type Group = {
         any_on: boolean;
         all_on: boolean;
     };
+    colour: string;
     recycle: boolean;
     class: string;
     action: {
@@ -50,11 +52,13 @@ export type Group = {
         alert: string;
         colormode: string;
     };
+    scenes: Array<Partial<Scene>>;
 }
 
 export type Groups = Record<string, Group>
 
 export type Scene = {
+    id: string;
     name: string;
     type: string;
     group: string;
@@ -68,6 +72,7 @@ export type Scene = {
     };
     picture: string;
     image: string;
+    imageUrl: string;
     lastupdated: string;
     version: number;
     lightstates: Record<string, {

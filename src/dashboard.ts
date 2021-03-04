@@ -1,9 +1,9 @@
 
 import * as Conversions from './conversions';
-import {Groups} from './hue_api_types';
+import {Group, Groups} from './hue_api_types';
 
 export const getRoomsFromGroups = (groups: Groups) => {
-  const rooms = [];
+  const rooms: Partial<Group>[] = [];
 
   for(const groupId in groups) {
     const group = groups[groupId];

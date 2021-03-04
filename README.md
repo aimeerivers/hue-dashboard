@@ -87,6 +87,16 @@ Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with 
       -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 30, "transitionTimeSeconds": 30}' \
       http://localhost:9000/background
 
+### Stop after N iterations
+
+By default, the tasks repeat forever. However you can get a task to
+delete itself after a given number of iterations with "maxIterations":
+
+    curl -X POST -H \
+      "Content-Type: application/json" \
+      -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 1, "transitionTimeSeconds": 0, "maxIterations": 5}' \
+      http://localhost:9000/background
+
 ### List background tasks
 
 Get a list of background tasks that are currently running

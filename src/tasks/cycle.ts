@@ -59,8 +59,9 @@ export class Task extends Base<Config> {
         super(taskId);
 
         this.config = config;
-        if (restoreState) this.state = this.restoreState(restoreState);
-        this.state ||= this.initialState();
+        let state: State | undefined;
+        if (restoreState) state = this.restoreState(restoreState);
+        this.state = state || this.initialState();
     }
 
     private initialState(): State {
@@ -109,15 +110,20 @@ export class Task extends Base<Config> {
         const taskId = this.taskId;
         const config = this.config;
         const state = this.state;
-        if (!state.colours) return;
 
-        state.colours.push(state.colours.shift());
+        const colours = state.colours;
+        if (!colours) return;
+
+        const colour = colours.shift();
+        if (!colour) return;
+
+        colours.push(colour);
         console.log({ taskId, colours: state.colours });
 
         Promise.all(
             config.lightIds.map((lightId, index) => {
                 const lightState = {
-                    xy: state.colours[index].xy,
+                    xy: colours[index].xy,
                     transitiontime: config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
                 };
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, lightState);

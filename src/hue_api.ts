@@ -19,7 +19,7 @@ export const getLight = (lightId: string) =>
 export const getLights = () =>
   request('GET', '/lights', {}) as Promise<Lights>;
 
-export const request = (method, path, body) => new Promise((resolve, reject) => {
+export const request = (method: string, path: string, body: unknown) => new Promise((resolve, reject) => {
   const options = {
     host: process.env.HUE_BRIDGE_IP_ADDRESS,
     path: `/api/${process.env.HUE_USERNAME}${path}`,

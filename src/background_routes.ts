@@ -5,7 +5,7 @@ import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask} from "./bac
 export const addTo = (app: express.Application) => {
 
     app.get('/background', (_req, res) => {
-        const answer = {};
+        const answer: any = {};
         for (const [taskId, config] of getBackgroundTasks()) {
             answer[taskId] = config;
         }

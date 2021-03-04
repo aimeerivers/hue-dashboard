@@ -3,7 +3,7 @@ import cors from 'cors';
 
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
-import {Group} from "./hue_api_types";
+import {Group, Scene} from "./hue_api_types";
 import * as Dashboard from './dashboard';
 import {drawSceneColours} from './pictures';
 import * as BackgroundRoutes from "./background_routes";
@@ -53,10 +53,12 @@ app.get('/', (_req, res) => {
   res.redirect('/dashboard');
 });
 
+type DashboardScene = Pick<Scene, "id" | "name" | "imageUrl">
+
 app.get('/dashboard', (_req, res) => {
   const promiseRooms = HueAPI.getGroups().then(groups => {
     const rooms = Dashboard.getRoomsFromGroups(groups);
-    return rooms;
+    return rooms.map(room => ({...room, scenes: [] as DashboardScene[]}));
   });
 
   Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
@@ -67,7 +69,6 @@ app.get('/dashboard', (_req, res) => {
         let sceneImage = `/scene/${sceneId}.png`;
         if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
         if (room) {
-          room.scenes ||= [];
           room.scenes.push({
             id: sceneId,
             name: scene.name,
@@ -197,7 +198,7 @@ app.put('/clock', (_req, res) => {
 app.get('/scene/:sceneId.png', (req, res) => {
   HueAPI.getScene(req.params.sceneId)
     .then(scene => {
-      const sceneColours = [];
+      const sceneColours: string[] = [];
       for(const index in scene.lightstates) {
         const lightState = scene.lightstates[index];
         if(lightState.on) {

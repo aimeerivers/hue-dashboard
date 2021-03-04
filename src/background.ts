@@ -29,7 +29,7 @@ export const getBackgroundTasks = ():Map<string, any> => {
 
 export const putBackgroundTask = (config: any): string | null => {
     const task = createTask(config);
-    if (!task) return;
+    if (!task) return null;
 
     backgroundTasks.set(task.taskId, task);
     saveAll();
@@ -68,7 +68,7 @@ export const deleteBackgroundTask = (taskId: string) => {
 const SAVE_FILE = "var/tasks.json";
 
 const saveAll = () => {
-    const data = {};
+    const data: any = {};
 
     for (const task of backgroundTasks.values()) {
         data[task.taskId] = {

@@ -44,34 +44,6 @@ Set light 1 to green, taking 3 seconds to change
 
     curl -X POST http://localhost:9000/light/14/rgb/0/255/0/3
 
-### Random colours
-
-Set light 1 to a random colour
-
-    curl -X POST http://localhost:9000/light/1/random
-
-Set light 1 to a random colour, immediately
-
-    curl -X POST http://localhost:9000/light/1/random/0
-
-Set light 1 to a random colour, taking 3 seconds to change
-
-    curl -X POST http://localhost:9000/light/1/random/3
-
-### Cycle colours around a room/zone
-
-Cycle colours in group 1
-
-    curl -X POST http://localhost:9000/group/1/cycle
-
-Cycle colours in group 1, immediately
-
-    curl -X POST http://localhost:9000/group/1/cycle/0
-
-Cycle colours in group 1, taking 5 seconds to change
-
-    curl -X POST http://localhost:9000/group/1/cycle/5
-
 ## Background tasks
 
 Instead of calling CURL commands on a timer, we can set up a background task. This is very much work-in-progress and is likely to change in the future.

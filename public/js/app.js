@@ -1,5 +1,4 @@
 let checkboxes = document.getElementsByClassName('on-off');
-let roomOverlays = document.getElementsByClassName('room-overlay');
 let sceneImages = document.getElementsByClassName('scene-image');
 
 var onOff = function() {

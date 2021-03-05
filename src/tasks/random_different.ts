@@ -1,8 +1,9 @@
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
-import {validateIntervalSeconds, validateLightIds, validateTransitionTimeSeconds} from "./common";
+import {validateIntervalSeconds, validateIterations, validateLightIds, validateTransitionTimeSeconds} from "./common";
 import {Base, BaseFactory} from "./base";
 import {randomXY} from "./colour_tools";
+import {deleteBackgroundTask} from "../background";
 
 const TYPE = "random-different";
 
@@ -11,10 +12,12 @@ export type Config = {
     lightIds: string[];
     transitionTimeSeconds: number;
     intervalSeconds: number;
+    maxIterations: number | null;
 };
 
 export type State = {
     timer: NodeJS.Timeout;
+    iterationCount: number;
 }
 
 export class Builder extends BaseFactory<Config, Task> {
@@ -31,15 +34,19 @@ export class Builder extends BaseFactory<Config, Task> {
         const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
         if (intervalSeconds === undefined) return;
 
+        const maxIterations = validateIterations(config.maxIterations);
+        if (maxIterations === undefined) return;
+
         const c: Config = {
             type: TYPE,
             lightIds,
             transitionTimeSeconds,
             intervalSeconds,
+            maxIterations,
         };
 
         return {
-            build: (taskId: string, _state?: any) => new Task(taskId, c),
+            build: (taskId: string, state?: any) => new Task(taskId, c, state)
         };
     }
 
@@ -55,12 +62,13 @@ export class Task extends Base<Config> {
     public readonly config: Config;
     private readonly state: State;
 
-    constructor(taskId: string, config: Config) {
+    constructor(taskId: string, config: Config, restoreState?: any) {
         super(taskId);
 
         this.config = config;
-        const state = this.initialState();
-        this.state = state;
+        let state: State | undefined;
+        if (restoreState) state = this.restoreState(restoreState);
+        this.state = state || this.initialState();
     }
 
     private initialState(): State {
@@ -69,6 +77,20 @@ export class Task extends Base<Config> {
                 () => this.tick(),
                 this.config.intervalSeconds * 1000,
             ),
+            iterationCount: 0,
+        };
+    }
+
+    private restoreState(restore: any): State | undefined {
+        const iterationCount = validateIterations(restore.iterationCount);
+        if (iterationCount === undefined || iterationCount === null) return;
+
+        return {
+            timer: setInterval(
+                () => this.tick(),
+                this.config.intervalSeconds * 1000,
+            ),
+            iterationCount,
         };
     }
 
@@ -77,12 +99,15 @@ export class Task extends Base<Config> {
     }
 
     public save() {
-        return null;
+        return {
+            iterationCount: this.state.iterationCount,
+        };
     }
 
     private tick() {
         const taskId = this.taskId;
         const config = this.config;
+        const state = this.state;
 
         Promise.all(
             config.lightIds.map(lightId => {
@@ -93,6 +118,11 @@ export class Task extends Base<Config> {
                 return HueAPI.request('PUT', `/lights/${lightId}/state`, lightState);
             })
         ).catch(e => console.log({ task: "failed", taskId, e }));
+
+        ++state.iterationCount;
+        if (config.maxIterations && state.iterationCount >= config.maxIterations) {
+            deleteBackgroundTask(this.taskId);
+        }
     }
 
 }

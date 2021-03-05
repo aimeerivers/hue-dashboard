@@ -1,7 +1,7 @@
 
 import {createCanvas} from 'canvas';
 
-export const drawSceneColours = (sceneColours) => {
+export const drawSceneColours = (sceneColours: string[]) => {
   if(sceneColours.length == 0) sceneColours = ["#ffd6b5"];
   const canvas = createCanvas(144, 144);
   const ctx = canvas.getContext('2d');

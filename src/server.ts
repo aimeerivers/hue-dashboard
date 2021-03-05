@@ -3,7 +3,7 @@ import cors from 'cors';
 
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
-import {Group} from "./hue_api_types";
+import {Scene} from "./hue_api_types";
 import * as Dashboard from './dashboard';
 import {drawSceneColours} from './pictures';
 import * as BackgroundRoutes from "./background_routes";
@@ -53,10 +53,12 @@ app.get('/', (_req, res) => {
   res.redirect('/dashboard');
 });
 
+type DashboardScene = Pick<Scene, "id" | "name" | "imageUrl">
+
 app.get('/dashboard', (_req, res) => {
   const promiseRooms = HueAPI.getGroups().then(groups => {
     const rooms = Dashboard.getRoomsFromGroups(groups);
-    return rooms;
+    return rooms.map(room => ({...room, scenes: [] as DashboardScene[]}));
   });
 
   Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
@@ -67,7 +69,6 @@ app.get('/dashboard', (_req, res) => {
         let sceneImage = `/scene/${sceneId}.png`;
         if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
         if (room) {
-          room.scenes ||= [];
           room.scenes.push({
             id: sceneId,
             name: scene.name,
@@ -128,53 +129,6 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
     .then(() => res.sendStatus(200));
 });
 
-app.post('/light/:lightId/random/:time?', (req, res) => {
-  let transitionTimeSeconds = parseFloat(req.params.time);
-  if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;
-
-  const lightId = parseInt(req.params.lightId);
-  const r = Math.floor(Math.random() * 255);
-  const g = Math.floor(Math.random() * 255);
-  const b = Math.floor(Math.random() * 255);
-  const xy = Conversions.rgbToXy(r, g, b);
-
-  const state = {
-    xy,
-    transitiontime: transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
-  };
-
-  HueAPI.request('PUT', `/lights/${lightId}/state`, state)
-    .then(() => res.sendStatus(200));
-});
-
-app.post('/group/:groupId/cycle/:time?', (req, res) =>
-  Promise.all([
-    HueAPI.request('GET', `/groups/${req.params.groupId}`, {}) as Promise<Group>,
-    HueAPI.getLights(),
-  ]).then(([group, allLights]) => {
-    let transitionTimeSeconds = parseFloat(req.params.time);
-    if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;
-
-    const colourLightIdsInThisGroup = group.lights
-      .filter(id => allLights[id].state.reachable && allLights[id].state.on && allLights[id].state.xy)
-      .sort();
-
-    return Promise.all(
-      colourLightIdsInThisGroup.map((lightId, index) => {
-        const nextLightId = colourLightIdsInThisGroup[(index + 1) % colourLightIdsInThisGroup.length];
-        const xy = allLights[nextLightId].state.xy;
-        const state = {
-          xy,
-          "transitiontime": transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
-        };
-        HueAPI.request('PUT', `/lights/${lightId}/state`, state);
-      })
-    );
-  }).then(() => {
-    res.sendStatus(200);
-  })
-);
-
 app.put('/clock', (_req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }
   // if(req.body.months) { updateLight(12, req.body.months.rgb); }
@@ -197,7 +151,7 @@ app.put('/clock', (_req, res) => {
 app.get('/scene/:sceneId.png', (req, res) => {
   HueAPI.getScene(req.params.sceneId)
     .then(scene => {
-      const sceneColours = [];
+      const sceneColours: string[] = [];
       for(const index in scene.lightstates) {
         const lightState = scene.lightstates[index];
         if(lightState.on) {

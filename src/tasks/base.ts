@@ -6,7 +6,7 @@ export abstract class Base<C> {
         this.taskId = taskId;
     }
 
-    public abstract stopTask();
+    public abstract stopTask(): void;
     public abstract save(): any;
 }
 

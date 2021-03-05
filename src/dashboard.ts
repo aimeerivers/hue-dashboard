@@ -2,8 +2,12 @@
 import * as Conversions from './conversions';
 import {Group, Groups} from './hue_api_types';
 
+export type Room = Pick<Group, "id" | "name" | "state"> & {
+  colour: string;
+}
+
 export const getRoomsFromGroups = (groups: Groups) => {
-  const rooms: Partial<Group>[] = [];
+  const rooms: Room[] = [];
 
   for(const groupId in groups) {
     const group = groups[groupId];

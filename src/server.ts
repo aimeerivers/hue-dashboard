@@ -108,6 +108,14 @@ app.put('/room/:roomId/scene/:sceneId', (req, res) =>
     })
 );
 
+app.put('/room/:roomId/brightness/:brightness', (req, res) =>
+  HueAPI.request('PUT', `/groups/${req.params.roomId}/action`, {"bri": parseInt(req.params.brightness)})
+    .then(str => {
+      console.log(str);
+      res.sendStatus(200);
+    })
+);
+
 app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
   let transitionTimeSeconds = parseFloat(req.params.time);
   if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;

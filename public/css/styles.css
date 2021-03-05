@@ -92,16 +92,24 @@ h2.room-name {
   color: black;
   padding: 16px;
   margin-top: 0;
+  margin-bottom: 0;
   height: 24px;
   overflow: hidden;
   white-space: nowrap;
 }
 
+.brightness {
+  display: none;
+  position: absolute;
+  top: 45px;
+  width: 99%;
+}
+
 .room-image, .room-overlay {
   position: absolute;
-  top: 56px;
+  top: 64px;
   left: 0;
-  height: 208px;
+  height: 200px;
   width: 100%;
   transition: background-color 0.3s;
 }

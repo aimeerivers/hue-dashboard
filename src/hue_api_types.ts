@@ -38,7 +38,6 @@ export type Group = {
         any_on: boolean;
         all_on: boolean;
     };
-    colour: string;
     recycle: boolean;
     class: string;
     action: {

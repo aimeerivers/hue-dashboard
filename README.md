@@ -44,34 +44,6 @@ Set light 1 to green, taking 3 seconds to change
 
     curl -X POST http://localhost:9000/light/14/rgb/0/255/0/3
 
-### Random colours
-
-Set light 1 to a random colour
-
-    curl -X POST http://localhost:9000/light/1/random
-
-Set light 1 to a random colour, immediately
-
-    curl -X POST http://localhost:9000/light/1/random/0
-
-Set light 1 to a random colour, taking 3 seconds to change
-
-    curl -X POST http://localhost:9000/light/1/random/3
-
-### Cycle colours around a room/zone
-
-Cycle colours in group 1
-
-    curl -X POST http://localhost:9000/group/1/cycle
-
-Cycle colours in group 1, immediately
-
-    curl -X POST http://localhost:9000/group/1/cycle/0
-
-Cycle colours in group 1, taking 5 seconds to change
-
-    curl -X POST http://localhost:9000/group/1/cycle/5
-
 ## Background tasks
 
 Instead of calling CURL commands on a timer, we can set up a background task. This is very much work-in-progress and is likely to change in the future.
@@ -82,9 +54,8 @@ Set light 1 to a random colour, every second, immediately
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-same", "lightIds": ["1"]}' \
+      -d '{"type": "random-same", "lightIds": ["1"], "intervalSeconds": 1, "transitionTimeSeconds": 0}' \
       http://localhost:9000/background
-
 
 Set lights 1 and 2 to (the same) random colour, every 5 seconds, taking 3 seconds to change
 
@@ -97,7 +68,7 @@ Set lights 1 and 2 to (probably) different random colours, every second, immedia
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "random-different", "lightIds": ["1", "2"]}' \
+      -d '{"type": "random-different", "lightIds": ["1", "2"], "intervalSeconds": 1, "transitionTimeSeconds": 0}' \
       http://localhost:9000/background
 
 ### Cycle colours
@@ -106,7 +77,7 @@ Cycle the colours of lights 1, 2, and 3 (to each other), every second, immediate
 
     curl -X POST -H \
       "Content-Type: application/json" \
-      -d '{"type": "cycle", "lightIds": ["1", "2", "3"]}' \
+      -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 1, "transitionTimeSeconds": 0}' \
       http://localhost:9000/background
 
 Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with a long, continuous fade
@@ -114,6 +85,16 @@ Cycle the colours of lights 1, 2, and 3 (to each other), every 30 seconds, with 
     curl -X POST -H \
       "Content-Type: application/json" \
       -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 30, "transitionTimeSeconds": 30}' \
+      http://localhost:9000/background
+
+### Stop after N iterations
+
+By default, the tasks repeat forever. However you can get a task to
+delete itself after a given number of iterations with "maxIterations":
+
+    curl -X POST -H \
+      "Content-Type: application/json" \
+      -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 1, "transitionTimeSeconds": 0, "maxIterations": 5}' \
       http://localhost:9000/background
 
 ### List background tasks

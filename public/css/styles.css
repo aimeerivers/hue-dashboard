@@ -48,6 +48,7 @@ h2.room-name {
   left: 0;
   height: 208px;
   width: 100%;
+  transition: background-color 0.3s;
 }
 
 .room-image {

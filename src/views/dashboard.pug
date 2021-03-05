@@ -11,7 +11,9 @@ html(lang='en')
     div.rooms
       each room in rooms
         div.room
-          input(id="room-on-off-" + room.id class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
+          label.switch
+            input(id="room-on-off-" + room.id class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
+            span.slider.round
           h2.room-name #{room.name}
 
           .room-image &nbsp;

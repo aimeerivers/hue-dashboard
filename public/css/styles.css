@@ -9,8 +9,14 @@
 .rooms {
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   grid-gap: 40px;
+}
+
+@media only screen and (max-width: 400px) {
+  .rooms {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
 }
 
 .room {
@@ -29,10 +35,11 @@
 
 h2.room-name {
   color: black;
-  border-bottom: 1px solid #888;
   padding: 16px;
   margin-top: 0;
   height: 24px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .room-image, .room-overlay {
@@ -41,6 +48,11 @@ h2.room-name {
   left: 0;
   height: 208px;
   width: 100%;
+}
+
+.room-image {
+  border-top: 1px solid #888;
+  border-bottom: 1px solid #888;
 }
 
 .room-overlay {

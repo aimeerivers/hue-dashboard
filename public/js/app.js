@@ -47,5 +47,5 @@ var updateState = function() {
   getStateCall.send();
 }
 
-setInterval(updateState, 10000);
+setInterval(updateState, 5000);
 updateState();

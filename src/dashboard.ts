@@ -4,6 +4,7 @@ import {Group, Groups} from './hue_api_types';
 
 export type Room = Pick<Group, "id" | "name" | "state"> & {
   colour: string;
+  brightness: number;
 }
 
 export const getRoomsFromGroups = (groups: Groups) => {
@@ -13,7 +14,11 @@ export const getRoomsFromGroups = (groups: Groups) => {
     const group = groups[groupId];
     if(group.type == 'Room' || group.type == 'Zone') {
       let colour = "";
+      let brightness = 0;
       if(group.state.any_on) {
+        if(group.action.bri) {
+          brightness = group.action.bri;
+        }
         if(group.action.xy && group.action.bri) {
           colour = Conversions.xyBriToHex(group.action.xy[0], group.action.xy[1], group.action.bri);
         } else if(group.action.colormode == 'ct') {
@@ -24,7 +29,8 @@ export const getRoomsFromGroups = (groups: Groups) => {
         id: groupId,
         name: group.name,
         state: group.state,
-        colour: colour
+        colour: colour,
+        brightness: brightness,
       });
     }
   }

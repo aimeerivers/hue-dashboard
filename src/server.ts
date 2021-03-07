@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 
+import * as Setup from './setup';
 import * as Conversions from './conversions';
 import * as HueAPI from './hue_api';
 import {Scene} from "./hue_api_types";
@@ -49,13 +50,33 @@ app.set('view engine', 'pug');
 app.set('views', './src/views');
 app.use(express.static('public'));
 
-app.get('/', (_req, res) => {
-  res.redirect('/dashboard');
-});
-
 type DashboardScene = Pick<Scene, "id" | "name" | "imageUrl">
 
 app.get('/dashboard', (_req, res) => {
+  res.redirect('/');
+});
+
+app.get('/reset', (_req, res) => {
+  res.sendStatus(200);
+  // res.redirect('/');
+});
+
+app.get('/setup', (_req, res) => {
+  if(!Setup.hueBridgeIpAddressAcquired()) {
+    console.log('finding');
+    Setup.findHueBridgeIpAddress().then(lol => {
+      console.log("LOLO", lol);
+    });
+  }
+  res.sendStatus(200);
+  // res.redirect('/');
+});
+
+app.get('/', (_req, res) => {
+  if(!Setup.hueBridgeIpAddressAcquired()) res.redirect('/setup');
+  if(!Setup.hueBridgeApiKeyGenerated()) res.redirect('/setup');
+  if(!Setup.hueBridgeResponding()) res.redirect('/reset');
+
   const promiseRooms = HueAPI.getGroups().then(groups => {
     const rooms = Dashboard.getRoomsFromGroups(groups);
     return rooms.map(room => ({...room, scenes: [] as DashboardScene[]}));

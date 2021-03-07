@@ -15,7 +15,8 @@ html(lang='en')
             input(id="room-on-off-" + room.id class='on-off' type='checkbox' data-room-id=room.id checked=room.state.any_on)
             span.slider.round
           h2.room-name #{room.name}
-          input.brightness(id="brightness-" + room.id type="range" min=1 max=254 data-room-id=room.id)
+          .brightness-container
+            input.brightness(id="brightness-" + room.id type="range" min=1 max=254 data-room-id=room.id)
 
           .room-image &nbsp;
           .room-overlay(id="room-overlay-" + room.id) &nbsp;

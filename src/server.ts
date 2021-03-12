@@ -63,9 +63,10 @@ app.get('/reset', (_req, res) => {
 
 app.get('/setup', (_req, res) => {
   if(!Setup.hueBridgeIpAddressAcquired()) {
-    console.log('finding');
     Setup.findHueBridgeIpAddress().then(lol => {
-      console.log("LOLO", lol);
+      console.log("Hue Bridge found!", lol.internalipaddress);
+    }).catch(err => {
+      console.log(err);
     });
   }
   res.sendStatus(200);

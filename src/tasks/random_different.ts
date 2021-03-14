@@ -17,11 +17,13 @@ export type Config = {
     lightIds: (string | string[])[];
     transitionTimeSeconds: number;
     intervalSeconds: number;
+    phaseDelaySeconds?: number;
     maxIterations: number | null;
 };
 
 export type State = {
     timer: NodeJS.Timeout;
+    nextGroupIndex: number;
     iterationCount: number;
 }
 
@@ -39,6 +41,8 @@ export class Builder extends BaseFactory<Config, Task> {
         const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
         if (intervalSeconds === undefined) return;
 
+        const phaseDelaySeconds = validateIntervalSeconds(config.phaseDelaySeconds);
+
         const maxIterations = validateIterations(config.maxIterations);
         if (maxIterations === undefined) return;
 
@@ -47,6 +51,7 @@ export class Builder extends BaseFactory<Config, Task> {
             lightIds,
             transitionTimeSeconds,
             intervalSeconds,
+            phaseDelaySeconds,
             maxIterations,
         };
 
@@ -78,10 +83,11 @@ export class Task extends Base<Config> {
 
     private initialState(): State {
         return {
-            timer: setInterval(
+            timer: setTimeout(
                 () => this.tick(),
-                this.config.intervalSeconds * 1000,
+                0,
             ),
+            nextGroupIndex: 0,
             iterationCount: 0,
         };
     }
@@ -90,17 +96,21 @@ export class Task extends Base<Config> {
         const iterationCount = validateIterations(restore.iterationCount);
         if (iterationCount === undefined || iterationCount === null) return;
 
+        const nextGroupIndex = restore.nextGroupIndex;
+        if (typeof nextGroupIndex !== 'number') return;
+
         return {
-            timer: setInterval(
+            timer: setTimeout(
                 () => this.tick(),
-                this.config.intervalSeconds * 1000,
+                0,
             ),
+            nextGroupIndex,
             iterationCount,
         };
     }
 
     public stopTask() {
-        clearInterval(this.state.timer);
+        clearTimeout(this.state.timer);
     }
 
     public save() {
@@ -114,26 +124,38 @@ export class Task extends Base<Config> {
         const config = this.config;
         const state = this.state;
 
+        const lightIdOrIds = config.lightIds[state.nextGroupIndex];
+        ++state.nextGroupIndex;
+        if (state.nextGroupIndex >= config.lightIds.length) state.nextGroupIndex = 0;
+
+        const lightIds = Array.isArray(lightIdOrIds) ? lightIdOrIds : [lightIdOrIds];
+
+        const lightState = {
+            xy: randomXY(),
+            transitiontime: config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
+        };
+
         Promise.all(
-            config.lightIds.map(lightIdOrIds => {
-                const lightState = {
-                    xy: randomXY(),
-                    transitiontime: config.transitionTimeSeconds * TRANSITION_TIME_UNITS_PER_SECOND,
-                };
-
-                const lightIds = Array.isArray(lightIdOrIds) ? lightIdOrIds : [lightIdOrIds];
-
-                return Promise.all(
-                    lightIds.map(lightId =>
-                        HueAPI.request('PUT', `/lights/${lightId}/state`, lightState)
-                    )
-                );
-            })
+            lightIds.map(lightId =>
+                HueAPI.request('PUT', `/lights/${lightId}/state`, lightState)
+            )
         ).catch(e => console.log({ task: "failed", taskId, e }));
 
-        ++state.iterationCount;
-        if (config.maxIterations && state.iterationCount >= config.maxIterations) {
-            deleteBackgroundTask(this.taskId);
+        if (state.nextGroupIndex === 0) {
+            state.timer = setTimeout(
+                () => this.tick(),
+                config.intervalSeconds * 1000,
+            );
+
+            ++state.iterationCount;
+            if (config.maxIterations && state.iterationCount >= config.maxIterations) {
+                deleteBackgroundTask(this.taskId);
+            }
+        } else {
+            state.timer = setTimeout(
+                () => this.tick(),
+                (config.phaseDelaySeconds || 0) * 1000,
+            );
         }
     }
 

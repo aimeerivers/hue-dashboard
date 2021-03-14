@@ -7,6 +7,14 @@ export const validateLightIds = (data: any): string[] | undefined => {
     return dataArray;
 };
 
+export const validateLightGroupIds = (data: any): (string | string[])[] | undefined => {
+    if (!Array.isArray(data)) return;
+
+    if (data.every(item => couldBeLightId(item) || validateLightIds(item))) return data;
+
+    return;
+};
+
 const couldBeLightId = (data: any): boolean =>
     (typeof data === 'string') && !!data.match(/^[0-9]{1,6}$/);
 

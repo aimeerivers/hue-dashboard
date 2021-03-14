@@ -1,8 +1,9 @@
-import {Base, BaseFactory} from "./base";
+import {Base, BaseConfig, BaseFactory} from "./base";
+import {validateBaseConfig} from "./common";
 
 const TYPE = "noop";
 
-export type Config = {
+export type Config = BaseConfig & {
     type: typeof TYPE;
 };
 
@@ -14,7 +15,11 @@ export class Builder extends BaseFactory<Config, Task> {
     validate(config: any) {
         if (config.type !== TYPE) return;
 
+        const base = validateBaseConfig(config);
+        if (!base) return;
+
         const typedConfig: Config = {
+            ...base,
             type: TYPE,
         };
 

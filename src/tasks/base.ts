@@ -1,4 +1,8 @@
-export abstract class Base<C> {
+export type BaseConfig = {
+    enabled: boolean;
+}
+
+export abstract class Base<C extends BaseConfig> {
     public readonly taskId: string;
     public readonly config: C;
 
@@ -11,7 +15,7 @@ export abstract class Base<C> {
     public abstract save(): any;
 }
 
-export abstract class BaseFactory<C, T extends Base<C>> {
+export abstract class BaseFactory<C extends BaseConfig, T extends Base<C>> {
     abstract validate(config: any): {
         build: (taskId: string, state?: any) => T;
     } | undefined;

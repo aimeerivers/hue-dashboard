@@ -149,6 +149,19 @@ Get a list of background tasks that are currently running
 
     curl -X GET http://localhost:9000/background
 
+### Disable and enable background tasks
+
+Disable (but don't delete) task 1:
+
+    curl -X POST http://localhost:9000/background/1/disable
+
+Enable it again:
+
+    curl -X POST http://localhost:9000/background/1/enable
+
+Tasks also accept an "enabled" boolean (defaults to true) in their config,
+so you can create a task as disabled if you like.
+
 ### Stop background tasks
 
 Stop the background task with id 1

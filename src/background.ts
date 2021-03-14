@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import {Base} from "./tasks/base";
+import {Base, BaseConfig} from "./tasks/base";
 import * as Cycle from './tasks/cycle';
 import * as Noop from './tasks/noop';
 import * as RandomDifferent from './tasks/random_different';
@@ -15,7 +15,7 @@ export const handlers = [
 
 let nextId = 0;
 
-const backgroundTasks: Map<string, Base<unknown>> = new Map();
+const backgroundTasks: Map<string, Base<BaseConfig>> = new Map();
 
 export const getBackgroundTasks = ():Map<string, any> => {
     const map = new Map<string, any>();
@@ -32,12 +32,12 @@ export const putBackgroundTask = (config: any): string | null => {
     if (!task) return null;
 
     backgroundTasks.set(task.taskId, task);
-    task.startTask();
+    if (task.config.enabled) task.startTask();
     saveAll();
     return task.taskId;
 };
 
-const createTask = (config: any): Base<unknown> | undefined => {
+const createTask = (config: any): Base<BaseConfig> | undefined => {
     for (const handler of handlers) {
         const validated = handler.validate(config);
 
@@ -55,6 +55,19 @@ const getTaskId = (): string => {
     }
 
     return taskId;
+};
+
+export const setTaskEnabled = (taskId: string, enabled: boolean): any | undefined => {
+    const task = backgroundTasks.get(taskId);
+    if (!task) return;
+
+    task.config.enabled = enabled;
+    saveAll();
+
+    if (enabled) task.startTask();
+    else task.stopTask();
+
+    return task.config;
 };
 
 export const deleteBackgroundTask = (taskId: string) => {
@@ -99,7 +112,7 @@ const restoreAll = () => {
         const task = tryRestore(taskId, data[taskId].config, data[taskId].state);
         if (task) {
             backgroundTasks.set(task.taskId, task);
-            task.startTask();
+            if (task.config.enabled) task.startTask();
         }
     }
 };

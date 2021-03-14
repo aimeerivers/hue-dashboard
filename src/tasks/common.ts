@@ -1,3 +1,13 @@
+import {BaseConfig} from "./base";
+
+export const validateBaseConfig = (data: any): BaseConfig | undefined => {
+    let enabled = data.enabled;
+    if (enabled === undefined) enabled = true;
+    if (enabled !== false && enabled !== true) return;
+
+    return { enabled };
+};
+
 export const validateLightIds = (data: any): string[] | undefined => {
     if (!Array.isArray(data)) return;
 

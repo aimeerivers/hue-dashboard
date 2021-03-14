@@ -8,9 +8,7 @@
     "noImplicitThis": true,
     "strictNullChecks": true,
     "sourceMap": true,
-    "outDir": "dist"
-  },
-  "lib": [
-    "es2015"
-  ]
+    "outDir": "dist",
+    "lib": ["ESNext"]
+  }
 }

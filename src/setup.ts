@@ -20,14 +20,15 @@ export const hueBridgeResponding = () => {
   return false;
 };
 
-export const findHueBridgeIpAddress = () => new Promise<Ip>((resolve, _reject) => {
-  findPossibleHueBridgeIpAddresses().then(addresses => {
-    addresses.forEach(address => {
-      hueBridgeResponds(address.internalipaddress).then(() => resolve(address));
-    });
-    // reject("Could not find Hue Bridge");
+export const findHueBridgeIpAddress = () => {
+  return findPossibleHueBridgeIpAddresses().then(addresses => {
+    return Promise.any(
+      addresses.map(
+        address => hueBridgeResponds(address.internalipaddress).then(() => address)
+      )
+    );
   });
-});
+};
 
 const hueBridgeResponds = (ipAddress: string) => new Promise<boolean>((resolve, reject) => {
   const options = {
@@ -39,11 +40,11 @@ const hueBridgeResponds = (ipAddress: string) => new Promise<boolean>((resolve, 
 
   const req = http.request(options, function(response) {
     if (response.statusCode == 200) resolve(true);
-    else reject(false);
+    else reject();
   });
 
   req.on('error', function () {
-    console.log(`Hue Bridge not found at ${ipAddress}`);
+    reject();
   });
 
   req.end();

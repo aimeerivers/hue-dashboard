@@ -1,0 +1,18 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='UTF-8')
+    link(rel="stylesheet" href="/css/page.css")
+    link(rel="stylesheet" href="/css/setup.css")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title #{title}
+  body.page
+    h1#myHeading #{title}
+
+    h2 Let's find your Hue Bridge
+
+    button#findBridge Find Hue Bridge
+    p#findBridgeError Could not find your Hue Bridge. Check it is plugged in and you are on the same network.
+    p#findBridgeSuccess Found Hue Bridge!
+
+  script(src='/js/setup.js')

@@ -62,15 +62,20 @@ app.get('/reset', (_req, res) => {
 });
 
 app.get('/setup', (_req, res) => {
+  res.render('setup', {
+    title: 'Setup'
+  })
+});
+
+app.get('/setup/findBridge', (_req, res) => {
   if(!Setup.hueBridgeIpAddressAcquired()) {
     Setup.findHueBridgeIpAddress().then(ip => {
       console.log("Hue Bridge found!", ip.internalipaddress);
-    }).catch(err => {
-      console.log(err);
+      res.sendStatus(200);
+    }).catch(() => {
+      res.sendStatus(400);
     });
   }
-  res.sendStatus(200);
-  // res.redirect('/');
 });
 
 app.get('/', (_req, res) => {
@@ -78,7 +83,7 @@ app.get('/', (_req, res) => {
   else if(!Setup.hueBridgeApiKeyGenerated()) res.redirect('/setup');
   else if(!Setup.hueBridgeResponding()) res.redirect('/reset');
 
-  else {  
+  else {   
     const promiseRooms = HueAPI.getGroups().then(groups => {
       const rooms = Dashboard.getRoomsFromGroups(groups);
       return rooms.map(room => ({...room, scenes: [] as DashboardScene[]}));

@@ -63,8 +63,8 @@ app.get('/reset', (_req, res) => {
 
 app.get('/setup', (_req, res) => {
   if(!Setup.hueBridgeIpAddressAcquired()) {
-    Setup.findHueBridgeIpAddress().then(lol => {
-      console.log("Hue Bridge found!", lol.internalipaddress);
+    Setup.findHueBridgeIpAddress().then(ip => {
+      console.log("Hue Bridge found!", ip.internalipaddress);
     }).catch(err => {
       console.log(err);
     });
@@ -75,36 +75,38 @@ app.get('/setup', (_req, res) => {
 
 app.get('/', (_req, res) => {
   if(!Setup.hueBridgeIpAddressAcquired()) res.redirect('/setup');
-  if(!Setup.hueBridgeApiKeyGenerated()) res.redirect('/setup');
-  if(!Setup.hueBridgeResponding()) res.redirect('/reset');
+  else if(!Setup.hueBridgeApiKeyGenerated()) res.redirect('/setup');
+  else if(!Setup.hueBridgeResponding()) res.redirect('/reset');
 
-  const promiseRooms = HueAPI.getGroups().then(groups => {
-    const rooms = Dashboard.getRoomsFromGroups(groups);
-    return rooms.map(room => ({...room, scenes: [] as DashboardScene[]}));
-  });
+  else {  
+    const promiseRooms = HueAPI.getGroups().then(groups => {
+      const rooms = Dashboard.getRoomsFromGroups(groups);
+      return rooms.map(room => ({...room, scenes: [] as DashboardScene[]}));
+    });
 
-  Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
-    for (const sceneId in scenes) {
-      const scene = scenes[sceneId];
-      if (scene.type == 'GroupScene' && scene.group && !UNWANTED_SCENE_NAMES.includes(scene.name)) {
-        const room = rooms.find(e => e.id == scene.group);
-        let sceneImage = `/scene/${sceneId}.png`;
-        if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
-        if (room) {
-          room.scenes.push({
-            id: sceneId,
-            name: scene.name,
-            imageUrl: sceneImage,
-          })
+    Promise.all([promiseRooms, HueAPI.getScenes()]).then(([rooms, scenes]) => {
+      for (const sceneId in scenes) {
+        const scene = scenes[sceneId];
+        if (scene.type == 'GroupScene' && scene.group && !UNWANTED_SCENE_NAMES.includes(scene.name)) {
+          const room = rooms.find(e => e.id == scene.group);
+          let sceneImage = `/scene/${sceneId}.png`;
+          if(STANDARD_SCENES.includes(scene.image)) sceneImage = `/images/scenes/${scene.image}.png`
+          if (room) {
+            room.scenes.push({
+              id: sceneId,
+              name: scene.name,
+              imageUrl: sceneImage,
+            })
+          }
         }
       }
-    }
 
-    res.render('dashboard', {
-      title: 'Hue Dashboard',
-      rooms: rooms
+      res.render('dashboard', {
+        title: 'Hue Dashboard',
+        rooms: rooms
+      });
     });
-  });
+  }
 });
 
 app.get('/groups/state', (_req, res) => {

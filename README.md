@@ -145,11 +145,11 @@ together; then wait 5 seconds, before starting again.
 
 ### List background tasks
 
-Get a list of background tasks that are currently running
+Get a list of background tasks that have been defined
 
     curl -X GET http://localhost:9000/background
 
-### Disable and enable background tasks
+### Disabling and enabling background tasks
 
 Disable (but don't delete) task 1:
 

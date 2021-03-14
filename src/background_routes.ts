@@ -5,9 +5,9 @@ import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask, setTaskEnab
 export const addTo = (app: express.Application) => {
 
     app.get('/background', (_req, res) => {
-        const answer: any = {};
+        const answer: unknown[] = [];
         for (const [taskId, config] of getBackgroundTasks()) {
-            answer[taskId] = config;
+            answer.push({ id: taskId, ...config });
         }
         res.status(200).send(answer);
     });
@@ -17,7 +17,7 @@ export const addTo = (app: express.Application) => {
         if (!taskId) return res.sendStatus(400);
 
         const config = getBackgroundTasks().get(taskId);
-        res.send({[taskId]: config});
+        res.send({ id: taskId, ...config });
     });
 
     // Not sure that this is a good interface
@@ -26,7 +26,7 @@ export const addTo = (app: express.Application) => {
         const config = setTaskEnabled(taskId, true);
         if (!config) return res.sendStatus(404);
 
-        res.send({[taskId]: config});
+        res.send({ id: taskId, ...config });
     });
 
     // Not sure that this is a good interface
@@ -35,7 +35,7 @@ export const addTo = (app: express.Application) => {
         const config = setTaskEnabled(taskId, false);
         if (!config) return res.sendStatus(404);
 
-        res.send({[taskId]: config});
+        res.send({ id: taskId, ...config });
     });
 
     app.delete('/background/:taskId', (req, res) => {

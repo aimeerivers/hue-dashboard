@@ -162,6 +162,11 @@ Enable it again:
 Tasks also accept an "enabled" boolean (defaults to true) in their config,
 so you can create a task as disabled if you like.
 
+### Task names
+
+All tasks have a "name" (a string). If you don't specify a name then the
+task's name is simply "".
+
 ### Stop background tasks
 
 Stop the background task with id 1

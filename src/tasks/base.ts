@@ -1,4 +1,5 @@
 export type BaseConfig = {
+    name: string;
     enabled: boolean;
 }
 

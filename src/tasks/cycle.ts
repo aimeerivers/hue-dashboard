@@ -15,7 +15,7 @@ export type Config = {
 };
 
 export type State = {
-    timer: NodeJS.Timeout;
+    timer?: NodeJS.Timeout;
     iterationCount: number;
     colours?: { xy: [number, number] }[];
 }
@@ -73,10 +73,6 @@ export class Task extends Base<Config> {
 
     private initialState(): State {
         const state: State = {
-            timer: setInterval(
-                () => this.tick(),
-                this.config.intervalSeconds * 1000,
-            ),
             iterationCount: 0,
         };
 
@@ -99,17 +95,23 @@ export class Task extends Base<Config> {
         if (iterationCount === undefined || iterationCount === null) return;
 
         return {
-            timer: setInterval(
-                () => this.tick(),
-                this.config.intervalSeconds * 1000,
-            ),
             iterationCount,
             colours: restore.colours,
         };
     }
 
+    public startTask() {
+        this.state.timer ||= setInterval(
+            () => this.tick(),
+            this.config.intervalSeconds * 1000,
+        );
+    }
+
     public stopTask() {
-        clearInterval(this.state.timer);
+        if (this.state.timer) {
+            clearInterval(this.state.timer);
+            this.state.timer = undefined;
+        }
     }
 
     public save() {

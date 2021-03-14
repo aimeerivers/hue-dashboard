@@ -43,6 +43,9 @@ export class Task extends Base<Config> {
         return {};
     }
 
+    public startTask() {
+    }
+
     public stopTask() {
     }
 

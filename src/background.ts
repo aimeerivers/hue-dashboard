@@ -32,6 +32,7 @@ export const putBackgroundTask = (config: any): string | null => {
     if (!task) return null;
 
     backgroundTasks.set(task.taskId, task);
+    task.startTask();
     saveAll();
     return task.taskId;
 };
@@ -96,7 +97,10 @@ const restoreAll = () => {
 
     for (const taskId of Object.keys(data)) {
         const task = tryRestore(taskId, data[taskId].config, data[taskId].state);
-        if (task) backgroundTasks.set(task.taskId, task);
+        if (task) {
+            backgroundTasks.set(task.taskId, task);
+            task.startTask();
+        }
     }
 };
 

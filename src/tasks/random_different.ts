@@ -22,7 +22,7 @@ export type Config = {
 };
 
 export type State = {
-    timer: NodeJS.Timeout;
+    timer?: NodeJS.Timeout;
     nextGroupIndex: number;
     iterationCount: number;
 }
@@ -83,10 +83,6 @@ export class Task extends Base<Config> {
 
     private initialState(): State {
         return {
-            timer: setTimeout(
-                () => this.tick(),
-                0,
-            ),
             nextGroupIndex: 0,
             iterationCount: 0,
         };
@@ -100,17 +96,23 @@ export class Task extends Base<Config> {
         if (typeof nextGroupIndex !== 'number') return;
 
         return {
-            timer: setTimeout(
-                () => this.tick(),
-                0,
-            ),
             nextGroupIndex,
             iterationCount,
         };
     }
 
+    public startTask() {
+        this.state.timer ||= setTimeout(
+            () => this.tick(),
+            0,
+        );
+    }
+
     public stopTask() {
-        clearTimeout(this.state.timer);
+        if (this.state.timer) {
+            clearTimeout(this.state.timer);
+            this.state.timer = undefined;
+        }
     }
 
     public save() {

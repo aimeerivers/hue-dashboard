@@ -1,13 +1,13 @@
 import express from 'express';
 
-import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask} from "./background";
+import {deleteBackgroundTask, getBackgroundTasks, putBackgroundTask, setTaskEnabled} from "./background";
 
 export const addTo = (app: express.Application) => {
 
     app.get('/background', (_req, res) => {
-        const answer: any = {};
+        const answer: unknown[] = [];
         for (const [taskId, config] of getBackgroundTasks()) {
-            answer[taskId] = config;
+            answer.push({ id: taskId, ...config });
         }
         res.status(200).send(answer);
     });
@@ -17,7 +17,25 @@ export const addTo = (app: express.Application) => {
         if (!taskId) return res.sendStatus(400);
 
         const config = getBackgroundTasks().get(taskId);
-        res.send({[taskId]: config});
+        res.send({ id: taskId, ...config });
+    });
+
+    // Not sure that this is a good interface
+    app.post('/background/:taskId/enable', (req, res) => {
+        const taskId = req.params.taskId;
+        const config = setTaskEnabled(taskId, true);
+        if (!config) return res.sendStatus(404);
+
+        res.send({ id: taskId, ...config });
+    });
+
+    // Not sure that this is a good interface
+    app.post('/background/:taskId/disable', (req, res) => {
+        const taskId = req.params.taskId;
+        const config = setTaskEnabled(taskId, false);
+        if (!config) return res.sendStatus(404);
+
+        res.send({ id: taskId, ...config });
     });
 
     app.delete('/background/:taskId', (req, res) => {

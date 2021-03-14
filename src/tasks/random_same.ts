@@ -1,18 +1,19 @@
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
+    validateBaseConfig,
     validateIntervalSeconds,
     validateIterations,
     validateLightGroupIds,
     validateTransitionTimeSeconds
 } from "./common";
-import {Base, BaseFactory} from "./base";
+import {Base, BaseConfig, BaseFactory} from "./base";
 import {randomXY} from "./colour_tools";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "random-same";
 
-export type Config = {
+export type Config = BaseConfig & {
     type: typeof TYPE;
     lightIds: (string | string[])[];
     transitionTimeSeconds: number;
@@ -22,7 +23,7 @@ export type Config = {
 };
 
 export type State = {
-    timer: NodeJS.Timeout;
+    timer?: NodeJS.Timeout;
     xy: [number, number];
     nextGroupIndex: number;
     iterationCount: number;
@@ -32,6 +33,9 @@ export class Builder extends BaseFactory<Config, Task> {
 
     validate(config: any) {
         if (config.type !== TYPE) return;
+
+        const base = validateBaseConfig(config);
+        if (!base) return;
 
         const lightIds = validateLightGroupIds(config.lightIds);
         if (!lightIds) return;
@@ -48,6 +52,7 @@ export class Builder extends BaseFactory<Config, Task> {
         if (maxIterations === undefined) return;
 
         const c: Config = {
+            ...base,
             type: TYPE,
             lightIds,
             transitionTimeSeconds,
@@ -84,10 +89,6 @@ export class Task extends Base<Config> {
 
     private initialState(): State {
         return {
-            timer: setTimeout(
-                () => this.tick(),
-                0,
-            ),
             xy: randomXY(),
             nextGroupIndex: 0,
             iterationCount: 0,
@@ -108,18 +109,24 @@ export class Task extends Base<Config> {
         if (typeof xy[1] !== 'number') return;
 
         return {
-            timer: setTimeout(
-                () => this.tick(),
-                0,
-            ),
             xy: xy as any,
             nextGroupIndex,
             iterationCount,
         };
     }
 
+    public startTask() {
+        this.state.timer ||= setTimeout(
+            () => this.tick(),
+            0,
+        );
+    }
+
     public stopTask() {
-        clearTimeout(this.state.timer);
+        if (this.state.timer) {
+            clearTimeout(this.state.timer);
+            this.state.timer = undefined;
+        }
     }
 
     public save() {

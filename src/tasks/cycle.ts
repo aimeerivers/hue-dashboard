@@ -1,12 +1,18 @@
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
-import {validateIntervalSeconds, validateIterations, validateLightIds, validateTransitionTimeSeconds} from "./common";
-import {Base, BaseFactory} from "./base";
+import {
+    validateBaseConfig,
+    validateIntervalSeconds,
+    validateIterations,
+    validateLightIds,
+    validateTransitionTimeSeconds
+} from "./common";
+import {Base, BaseConfig, BaseFactory} from "./base";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "cycle";
 
-export type Config = {
+export type Config = BaseConfig & {
     type: typeof TYPE;
     lightIds: string[];
     transitionTimeSeconds: number;
@@ -15,7 +21,7 @@ export type Config = {
 };
 
 export type State = {
-    timer: NodeJS.Timeout;
+    timer?: NodeJS.Timeout;
     iterationCount: number;
     colours?: { xy: [number, number] }[];
 }
@@ -24,6 +30,9 @@ export class Builder extends BaseFactory<Config, Task> {
 
     validate(config: any) {
         if (config.type !== TYPE) return;
+
+        const base = validateBaseConfig(config);
+        if (!base) return;
 
         const lightIds = validateLightIds(config.lightIds);
         if (!lightIds) return;
@@ -38,6 +47,7 @@ export class Builder extends BaseFactory<Config, Task> {
         if (maxIterations === undefined) return;
 
         const c: Config = {
+            ...base,
             type: TYPE,
             lightIds,
             transitionTimeSeconds,
@@ -73,10 +83,6 @@ export class Task extends Base<Config> {
 
     private initialState(): State {
         const state: State = {
-            timer: setInterval(
-                () => this.tick(),
-                this.config.intervalSeconds * 1000,
-            ),
             iterationCount: 0,
         };
 
@@ -99,17 +105,23 @@ export class Task extends Base<Config> {
         if (iterationCount === undefined || iterationCount === null) return;
 
         return {
-            timer: setInterval(
-                () => this.tick(),
-                this.config.intervalSeconds * 1000,
-            ),
             iterationCount,
             colours: restore.colours,
         };
     }
 
+    public startTask() {
+        this.state.timer ||= setInterval(
+            () => this.tick(),
+            this.config.intervalSeconds * 1000,
+        );
+    }
+
     public stopTask() {
-        clearInterval(this.state.timer);
+        if (this.state.timer) {
+            clearInterval(this.state.timer);
+            this.state.timer = undefined;
+        }
     }
 
     public save() {

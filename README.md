@@ -97,6 +97,52 @@ delete itself after a given number of iterations with "maxIterations":
       -d '{"type": "cycle", "lightIds": ["1", "2", "3"], "intervalSeconds": 1, "transitionTimeSeconds": 0, "maxIterations": 5}' \
       http://localhost:9000/background
 
+### The "random-same" and "random-different" tasks
+
+Use these tasks to set the lights to random colours.
+
+ * type: "random-same" or "random-different"
+ * lightIds: an array of light IDs / light-ID-groups
+ * intervalSeconds: the interval in seconds between updates
+ * transitionTimeSeconds: how long to take to transition from one colour to the next
+ * phaseDelaySeconds: (optional) How long to wait between updating one light and the next
+ * maxIterations: (optional) delete the task after this many iterations
+
+The difference between "random-same" and "random-different" is that
+with "random-same", on each iteration of the task, all lights get the
+same random colour; whereas with "random-different", each light gets a
+_(potentially) different_ random colour.
+
+Use "phaseDelaySeconds" to add a delay between updating one light and the next.
+For example,
+```
+   {
+     "type": "random-same",
+     "lightIds": ["1", "2", "3"],
+     "intervalSeconds": 5,
+     "transitionTimeSeconds": 0,
+     "phaseDelaySeconds": 1,
+   }
+```
+would pick a random colour, then update light #1 to it; then wait 1 second,
+and update light #2; then wait 1 second again, and update light #3; then wait
+5 seconds, before starting again.
+
+A "light-ID-group" is simply an array of light IDs which always get updated
+together. For example,
+```
+   {
+     "type": "random-same",
+     "lightIds": ["1", "2", ["3", "4", "5"]],
+     "intervalSeconds": 5,
+     "transitionTimeSeconds": 0,
+     "phaseDelaySeconds": 1,
+   }
+```
+would pick a random colour, then update light #1 to it; then wait 1 second,
+and update light #2; then wait 1 second again, and update lights #3, #4 and #5
+together; then wait 5 seconds, before starting again.
+
 ### List background tasks
 
 Get a list of background tasks that are currently running

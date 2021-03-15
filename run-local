@@ -6,6 +6,8 @@ yarn
 yarn build
 yarn lint
 
+( cd ui && yarn build )
+
 [ -f .env ] && source .env
 
 mkdir -p var

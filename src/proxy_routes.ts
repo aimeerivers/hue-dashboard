@@ -6,7 +6,7 @@ export const addTo = (app: express.Application) => {
 
     app.get('/proxy/lights', (_req, res) => {
         HueAPI.getLights().then(lights => {
-
+            res.header("Cache-Control", "max-age=2");
             res.send({
                 lights: Object.keys(lights).sort().map(lightId =>
                     ({ ...lights[lightId], id: lightId })
@@ -17,7 +17,7 @@ export const addTo = (app: express.Application) => {
 
     app.get('/proxy/scenes', (_req, res) => {
         HueAPI.getScenes().then(scenes => {
-
+            res.header("Cache-Control", "max-age=2");
             res.send({
                 scenes: Object.keys(scenes).sort().map(sceneId =>
                     ({ ...scenes[sceneId], id: sceneId })
@@ -28,7 +28,7 @@ export const addTo = (app: express.Application) => {
 
     app.get('/proxy/groups', (_req, res) => {
         HueAPI.getGroups().then(groups => {
-
+            res.header("Cache-Control", "max-age=2");
             res.send({
                 groups: Object.keys(groups).sort().map(groupId =>
                     ({ ...groups[groupId], id: groupId })

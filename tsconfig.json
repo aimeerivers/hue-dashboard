@@ -10,6 +10,7 @@
     "sourceMap": true,
     "outDir": "dist"
   },
+  "exclude": ["ui/**"],
   "lib": [
     "es2015"
   ]

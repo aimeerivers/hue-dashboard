@@ -53,6 +53,10 @@ app.get('/', (_req, res) => {
   res.redirect('/dashboard');
 });
 
+app.get('/react-dash', (_req, res) => {
+  res.render('react-dash', {});
+});
+
 type DashboardScene = Pick<Scene, "id" | "name" | "imageUrl">
 
 app.get('/dashboard', (_req, res) => {

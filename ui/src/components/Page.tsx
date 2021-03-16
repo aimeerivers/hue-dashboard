@@ -4,8 +4,8 @@ import {useState} from "react";
 import { Tabs, TabList, Tab, TabPanel } from '@zendeskgarden/react-tabs';
 import {DEFAULT_THEME, ThemeProvider} from '@zendeskgarden/react-theming'
 
-import BackgroundTasks from "./BackgroundTasks";
-import Debug from "./Debug";
+import BackgroundTasks from "./tasks";
+import Debug from "./debug";
 
 export default () => {
     const [selectedTab, setSelectedTab] = useState('tasks');

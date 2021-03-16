@@ -1,14 +1,29 @@
 import * as React from 'react';
-import DebugGroups from "./DebugGroups";
-import DebugLights from "./DebugLights";
-import DebugScenes from "./DebugScenes";
+import {useState} from "react";
+
+import { Tabs, TabList, Tab, TabPanel } from '@zendeskgarden/react-tabs';
+import {DEFAULT_THEME, ThemeProvider} from '@zendeskgarden/react-theming'
+
 import BackgroundTasks from "./BackgroundTasks";
+import Debug from "./Debug";
 
 export default () => {
-    return <div>
-        <BackgroundTasks/>
-        <DebugGroups/>
-        <DebugLights/>
-        <DebugScenes/>
-    </div>
+    const [selectedTab, setSelectedTab] = useState('tasks');
+
+    return (
+        <ThemeProvider theme={DEFAULT_THEME}>
+            <Tabs selectedItem={selectedTab} onChange={setSelectedTab}>
+                <TabList>
+                    <Tab item="tasks">Tasks</Tab>
+                    <Tab item="debug">Debug</Tab>
+                </TabList>
+                <TabPanel item="tasks">
+                    {selectedTab === 'tasks' && <BackgroundTasks/>}
+                </TabPanel>
+                <TabPanel item="debug">
+                    {selectedTab === 'debug' && <Debug/>}
+                </TabPanel>
+            </Tabs>
+        </ThemeProvider>
+    );
 };

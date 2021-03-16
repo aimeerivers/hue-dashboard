@@ -37,6 +37,7 @@ export default () => {
 
     return <div>
         <h1>Tasks</h1>
+        {data && data.length === 0 && <p><em>No tasks defined</em></p>}
         {data && <>
             <ul>
                 {data.map((task, index) => <li key={index}>

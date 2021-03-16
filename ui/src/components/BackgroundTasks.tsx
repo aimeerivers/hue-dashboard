@@ -30,6 +30,7 @@ export default () => {
     };
 
     useEffect(() => {
+        readData();
         const timer = setInterval(readData, 5000);
         return () => clearInterval(timer);
     }, []);

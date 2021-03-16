@@ -7,6 +7,10 @@
     "lib": "lib"
   },
   "dependencies": {
+    "@zendeskgarden/react-buttons": "^8.33.0",
+    "@zendeskgarden/react-dropdowns": "^8.33.0",
+    "@zendeskgarden/react-forms": "^8.33.0",
+    "@zendeskgarden/react-grid": "^8.33.0",
     "@zendeskgarden/react-tabs": "^8.33.0",
     "@zendeskgarden/react-theming": "^8.33.0",
     "react": "^16.12.0",

@@ -1,54 +1,20 @@
 import * as React from 'react';
-import {useEffect, useState} from "react";
-
-const url = "/background";
-
-type Task = {
-    id: string;
-    enabled: boolean;
-    name: string;
-}
+import TaskList from "./TaskList";
+import { Button } from '@zendeskgarden/react-buttons';
+import {useState} from "react";
+import AddTask from "./AddTask";
 
 export default () => {
-    const [data, setData] = useState<Task[]>();
-
-    const readData = () => {
-        fetch(url)
-            .then(response => {
-                const data = response.json().then(setData);
-            });
-    };
-
-    const doEnable = (task: Task, enabled: boolean) => {
-        fetch(
-            `/background/${task.id}/${enabled ? 'enable' : 'disable'}`,
-            { method: "POST" }
-        )
-            .then(() => {
-                readData();
-            })
-    };
-
-    useEffect(() => {
-        readData();
-        const timer = setInterval(readData, 5000);
-        return () => clearInterval(timer);
-    }, []);
+    const [isAdding, setIsAdding] = useState<boolean>(false);
 
     return <div>
-        <h1>Tasks</h1>
-        {data && data.length === 0 && <p><em>No tasks defined</em></p>}
-        {data && <>
-            <ul>
-                {data.map((task, index) => <li key={index}>
-                    #{task.id}{' '}
-                    <input type={"checkbox"}
-                           checked={task.enabled}
-                           onChange={e => doEnable(task, e.target.checked)}
-                           />
-                    {' '}{task.name.trim() || "<unnamed task>"}
-                </li>)}
-            </ul>
+        {!isAdding && <>
+            <h1>Tasks</h1>
+            <TaskList/>
+            <Button isPrimary onClick={() => setIsAdding(true)}>
+                Add task
+            </Button>
         </>}
+        {isAdding && <AddTask onDone={() => setIsAdding(false)}/>}
     </div>
 };

@@ -13,6 +13,13 @@ export const addTo = (app: express.Application) => {
         res.status(200).send(answer);
     });
 
+    app.get('/background/:taskId', (req, res) => {
+        for (const [taskId, task] of getBackgroundTasks()) {
+            if (taskId === req.params.taskId) return res.send({ id: taskId, ...task.config });
+        }
+        res.status(404);
+    });
+
     app.post('/background', (req, res) => {
         const maybeTask = putBackgroundTask(req.body);
         if (!maybeTask) return res.status(400).send({});

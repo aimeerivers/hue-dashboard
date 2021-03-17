@@ -3,20 +3,22 @@ import {useEffect, useState} from "react";
 
 const url = "/background";
 
+type Props = {
+    onEdit: (id: string) => void;
+}
+
 type Task = {
     id: string;
     enabled: boolean;
     name: string;
 }
 
-export default () => {
+export default (props: Props) => {
     const [data, setData] = useState<Task[]>();
 
     const readData = () => {
         fetch(url)
-            .then(response => {
-                const data = response.json().then(setData);
-            });
+            .then(response => response.json().then(setData));
     };
 
     const doEnable = (task: Task, enabled: boolean) => {
@@ -40,12 +42,12 @@ export default () => {
         {data && <>
             <ul>
                 {data.map((task, index) => <li key={index}>
-                    #{task.id}{' '}
                     <input type={"checkbox"}
                            checked={task.enabled}
                            onChange={e => doEnable(task, e.target.checked)}
                            />
                     {' '}{task.name.trim() || "<unnamed task>"}
+                    <button onClick={() => props.onEdit(task.id)}>Edit</button>
                 </li>)}
             </ul>
         </>}

@@ -5,17 +5,29 @@ import {ChangeEvent, useState} from "react";
 
 type Props = {
     onDone: () => void;
+    taskId?: string;
+    name?: string;
+    enabled?: boolean;
+    type?: "cycle" | "random-same" | "random-different";
+    lightIds?: (string | string[])[];
+    transitionTimeSeconds?: number;
+    intervalSeconds?: number;
+    phaseDelaySeconds?: number;
+    maxIterations?: number;
 }
 
 export default (props: Props) => {
-    const [name, setName] = useState<string>("");
-    const [enabled, setEnabled] = useState<boolean>(true);
-    const [type, setType] = useState<"cycle" | "random-same" | "random-different">("random-different");
-    const [lightIdsText, setLightIdsText] = useState<string>("");
-    const [transitionTimeSeconds, setTransitionTimeSeconds] = useState<number>(0.4);
-    const [intervalSeconds, setIntervalSeconds] = useState<number>(1);
-    const [phaseDelaySeconds, setPhaseDelaySeconds] = useState<number>(0);
-    const [maxIterationsText, setMaxIterationsText] = useState<string>("");
+    const [name, setName] = useState<string>(props.name ?? "");
+    const [enabled, setEnabled] = useState<boolean>(props.enabled ?? true);
+    const [type, setType] = useState<"cycle" | "random-same" | "random-different">(props.type ?? "random-different");
+    const [lightIdsText, setLightIdsText] = useState<string>(
+        props.lightIds ? props.lightIds.map(
+            t => typeof t === 'string' ? t : t.join("+")
+        ).join(" ") : "");
+    const [transitionTimeSeconds, setTransitionTimeSeconds] = useState<number>(props.transitionTimeSeconds ?? 0.4);
+    const [intervalSeconds, setIntervalSeconds] = useState<number>(props.intervalSeconds ?? 1);
+    const [phaseDelaySeconds, setPhaseDelaySeconds] = useState<number>(props.phaseDelaySeconds ?? 0);
+    const [maxIterationsText, setMaxIterationsText] = useState<string>((props.maxIterations ?? 0).toString());
 
     const maxIterations: number | undefined = (
         maxIterationsText.trim() === ''
@@ -28,10 +40,13 @@ export default (props: Props) => {
         .map(t => t.split('+'))
         .map((idOrGroup: string[]) => idOrGroup.length === 1 ? idOrGroup[0] : idOrGroup);
 
-    const onSave = () => {
-        if (maxIterations !== undefined && isNaN(maxIterations)) return;
-        if (lightIds.length === 0) return;
+    const isValid = () => {
+        if (maxIterations !== undefined && isNaN(maxIterations)) return false;
+        if (lightIds.length === 0) return false;
+        return true;
+    };
 
+    const onSave = (): Promise<string> => {
         const task: any = {
             name,
             enabled,
@@ -45,16 +60,40 @@ export default (props: Props) => {
         if (type === 'random-same' || type === 'random-different')
             task.phaseDelaySeconds = phaseDelaySeconds;
 
-        console.debug({ task });
-
-        fetch(
+        return fetch(
             `/background`,
             { method: "POST", body: JSON.stringify(task), headers: { "Content-Type": "application/json"} },
         )
             .then(r => {
-                if (r.status === 200) props.onDone();
-                else console.error({ task, response: r });
+                if (r.status === 200) return r.json().then(data => data.id);
+
+                throw `wanted 200, got ${r.status} ${r.statusText}`;
             });
+    };
+
+    const onCreate = () => {
+        if (!isValid()) return;
+
+        onSave().then(() => props.onDone());
+    };
+
+    const doDelete = () =>
+        fetch(`/background/${props.taskId}`, { method: 'DELETE'})
+            .then(r => {if (r.status !== 204) throw `wanted 204, got ${r.status} ${r.statusText}`;})
+            ;
+
+    const onUpdate = () => {
+        if (!isValid()) return;
+
+        onSave()
+            .then(() => fetch(`/background/${props.taskId}`, { method: 'DELETE'}))
+            .then(r => {if (r.status !== 204) throw `wanted 204, got ${r.status} ${r.statusText}`;})
+            .then(() => doDelete())
+            .then(() => props.onDone())
+    };
+
+    const onDelete = () => {
+        doDelete().then(() => props.onDone());
     };
 
     return <div style={{maxWidth: "30em", marginLeft: "1em"}}>
@@ -181,9 +220,19 @@ export default (props: Props) => {
 
         <br/>
 
-        <Button isPrimary onClick={onSave}>
+        <Button isPrimary onClick={props.taskId ? onUpdate : onCreate}>
             Save
         </Button>
+        {props.taskId && <>
+            {' '}
+            <Button isPrimary onClick={onCreate}>
+                Save as copy
+            </Button>
+            {' '}
+            <Button isDanger onClick={onDelete}>
+                Delete
+            </Button>
+        </>}
         {' '}
         <Button onClick={props.onDone}>
             Cancel

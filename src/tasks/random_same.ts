@@ -1,65 +1,48 @@
+import * as t from "io-ts";
+import {isLeft} from "fp-ts/Either";
+
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
-    validateBaseConfig,
-    validateIntervalSeconds,
-    validateIterations,
-    validateLightGroupIds,
-    validateTransitionTimeSeconds
+    TBaseConfig, TIntervalSeconds, TIterations, TLightGroupIds, TPhaseDelaySeconds, TTransitionTimeSeconds, TXY
 } from "./common";
-import {Base, BaseConfig, BaseFactory} from "./base";
+import {Base, BaseFactory} from "./base";
 import {randomXY} from "./colour_tools";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "random-same";
 
-export type Config = BaseConfig & {
-    type: typeof TYPE;
-    lightIds: (string | string[])[];
-    transitionTimeSeconds: number;
-    intervalSeconds: number;
-    phaseDelaySeconds?: number;
-    maxIterations: number | null;
-};
+export const TConfig = t.intersection([
+    TBaseConfig,
+    t.type({
+        type: t.literal(TYPE),
+        lightIds: TLightGroupIds,
+        transitionTimeSeconds: TTransitionTimeSeconds,
+        intervalSeconds: TIntervalSeconds,
+        phaseDelaySeconds: TPhaseDelaySeconds,
+        maxIterations: TIterations,
+    }),
+]);
+
+export type Config = t.TypeOf<typeof TConfig>
+
+const TPersistedState = t.type({
+    xy: TXY,
+    nextGroupIndex: t.number, // weak
+    iterationCount: t.number, // weak
+});
 
 export type State = {
     timer?: NodeJS.Timeout;
-    xy: [number, number];
-    nextGroupIndex: number;
-    iterationCount: number;
-}
+} & t.TypeOf<typeof TPersistedState>
 
 export class Builder extends BaseFactory<Config, Task> {
 
     validate(config: any) {
-        if (config.type !== TYPE) return;
+        const maybeConfig = TConfig.decode(config);
+        if (isLeft(maybeConfig)) return;
 
-        const base = validateBaseConfig(config);
-        if (!base) return;
-
-        const lightIds = validateLightGroupIds(config.lightIds);
-        if (!lightIds) return;
-
-        const transitionTimeSeconds = validateTransitionTimeSeconds(config.transitionTimeSeconds);
-        if (transitionTimeSeconds === undefined) return;
-
-        const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
-        if (intervalSeconds === undefined) return;
-
-        const phaseDelaySeconds = validateIntervalSeconds(config.phaseDelaySeconds);
-
-        const maxIterations = validateIterations(config.maxIterations);
-        if (maxIterations === undefined) return;
-
-        const c: Config = {
-            ...base,
-            type: TYPE,
-            lightIds,
-            transitionTimeSeconds,
-            intervalSeconds,
-            phaseDelaySeconds,
-            maxIterations,
-        };
+        const c = maybeConfig.right;
 
         return {
             build: (taskId: string, state?: any) => new Task(taskId, c, state)
@@ -96,23 +79,10 @@ export class Task extends Base<Config> {
     }
 
     private restoreState(restore: any): State | undefined {
-        const iterationCount = validateIterations(restore.iterationCount);
-        if (iterationCount === undefined || iterationCount === null) return;
+        const maybeState = TPersistedState.decode(restore);
+        if (isLeft(maybeState)) return;
 
-        const nextGroupIndex = restore.nextGroupIndex;
-        if (typeof nextGroupIndex !== 'number') return;
-
-        const xy = restore.xy;
-        if (!Array.isArray(xy)) return;
-        if (xy.length !== 2) return;
-        if (typeof xy[0] !== 'number') return;
-        if (typeof xy[1] !== 'number') return;
-
-        return {
-            xy: xy as any,
-            nextGroupIndex,
-            iterationCount,
-        };
+        return maybeState.right;
     }
 
     public startTask() {

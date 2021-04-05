@@ -13,20 +13,20 @@ const TConfig = t.intersection([
 
 type Config = t.TypeOf<typeof TConfig>
 
-const TPersistedState = t.type({});
+const TState = t.type({});
 
-type PersistedState = t.TypeOf<typeof TPersistedState>
+type State = t.TypeOf<typeof TState>
 
-class Task implements Base<Config, PersistedState> {
+class Task implements Base<Config, State> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    public readonly state: PersistedState;
+    public readonly state: State;
 
-    constructor(taskId: string, config: Config, persistedState?: PersistedState) {
+    constructor(taskId: string, config: Config, state?: State) {
         this.taskId = taskId;
         this.config = config;
-        this.state = persistedState || {};
+        this.state = state || {};
     }
 
     public startTask() {
@@ -35,15 +35,11 @@ class Task implements Base<Config, PersistedState> {
     public stopTask() {
     }
 
-    public persistedState() {
-        return {};
-    }
-
 }
 
 export default {
     TYPE,
     TConfig,
-    TPersistedState,
+    TState,
     Task,
 }

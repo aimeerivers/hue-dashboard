@@ -25,21 +25,21 @@ const TConfig = t.intersection([
 
 type Config = t.TypeOf<typeof TConfig>
 
-const TPersistedState = t.type({
+const TState = t.type({
     nextGroupIndex: t.number, // weak
     iterationCount: t.number, // weak
 });
 
-type PersistedState = t.TypeOf<typeof TPersistedState>
+type State = t.TypeOf<typeof TState>
 
-class Task implements Base<Config, PersistedState> {
+class Task implements Base<Config, State> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    public readonly state: PersistedState;
+    public readonly state: State;
     private timer?: NodeJS.Timeout;
 
-    constructor(taskId: string, config: Config, restoreState?: PersistedState) {
+    constructor(taskId: string, config: Config, restoreState?: State) {
         this.taskId = taskId;
         this.config = config;
         this.state = restoreState || this.initialState();
@@ -64,13 +64,6 @@ class Task implements Base<Config, PersistedState> {
             clearTimeout(this.timer);
             this.timer = undefined;
         }
-    }
-
-    public persistedState() {
-        return {
-            iterationCount: this.state.iterationCount,
-            nextGroupIndex: this.state.nextGroupIndex,
-        };
     }
 
     private tick() {
@@ -118,6 +111,6 @@ class Task implements Base<Config, PersistedState> {
 export default {
     TYPE,
     TConfig,
-    TPersistedState,
+    TState,
     Task,
 }

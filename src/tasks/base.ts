@@ -29,14 +29,14 @@ export const TBaseConfig = t.type({
 
 export type BaseConfig = t.TypeOf<typeof TBaseConfig>
 
-export interface BaseConstructor<C extends BaseConfig, PS> {
-    new (taskId: string, config: C, persistedState?: PS): Base<C, PS>;
+export interface BaseConstructor<C extends BaseConfig, S> {
+    new (taskId: string, config: C, state?: S): Base<C, S>;
 }
 
-export interface Base<C extends BaseConfig, PS> {
+export interface Base<C extends BaseConfig, S> {
     readonly taskId: string;
     readonly config: C;
-    readonly state: PS;
+    readonly state: S;
     startTask(): void;
     stopTask(): void;
 }
@@ -44,6 +44,6 @@ export interface Base<C extends BaseConfig, PS> {
 export type TaskSpec<T extends string, C extends BaseConfig & { type: T; }, S> = {
     TYPE: T;
     TConfig: t.Type<C>;
-    TPersistedState: t.Type<S>;
+    TState: t.Type<S>;
     Task: BaseConstructor<C, S>;
 }

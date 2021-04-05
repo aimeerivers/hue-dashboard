@@ -134,7 +134,7 @@ const tryRestore = (taskId: string, config: any, state: any): Base<any, any> | u
     for (const spec of specs) {
         if (spec.TYPE === config.type) {
             const maybeConfig = spec.TConfig.decode(config);
-            const maybeState = spec.TPersistedState.decode(state);
+            const maybeState = spec.TState.decode(state);
 
             if (isLeft(maybeConfig)) {
                 console.error(`Failed to restore task ${taskId}`);

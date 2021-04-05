@@ -27,28 +27,28 @@ const TConfig = t.intersection([
 
 type Config = t.TypeOf<typeof TConfig>
 
-const TPersistedState = t.type({
+const TState = t.type({
     iterationCount: t.number, // weak
     colours: t.array(t.type({ xy: TXY })),
 });
 
-type PersistedState = t.TypeOf<typeof TPersistedState>
+type State = t.TypeOf<typeof TState>
 
-class Task implements Base<Config, PersistedState> {
+class Task implements Base<Config, State> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    public readonly state: PersistedState;
+    public readonly state: State;
     private timer?: NodeJS.Timeout;
 
-    constructor(taskId: string, config: Config, restoreState?: PersistedState) {
+    constructor(taskId: string, config: Config, restoreState?: State) {
         this.taskId = taskId;
         this.config = config;
         this.state = restoreState || this.initialState();
     }
 
-    private initialState(): PersistedState {
-        const state: PersistedState = {
+    private initialState(): State {
+        const state: State = {
             iterationCount: 0,
             colours: [],
         };
@@ -113,6 +113,6 @@ class Task implements Base<Config, PersistedState> {
 export default {
     TYPE,
     TConfig,
-    TPersistedState,
+    TState,
     Task,
 }

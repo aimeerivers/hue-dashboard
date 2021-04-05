@@ -36,9 +36,9 @@ export interface BaseConstructor<C extends BaseConfig, PS> {
 export interface Base<C extends BaseConfig, PS> {
     readonly taskId: string;
     readonly config: C;
+    readonly state: PS;
     startTask(): void;
     stopTask(): void;
-    persistedState(): PS;
 }
 
 export type TaskSpec<T extends string, C extends BaseConfig & { type: T; }, S> = {

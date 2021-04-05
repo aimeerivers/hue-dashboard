@@ -34,15 +34,12 @@ const TPersistedState = t.type({
 
 type PersistedState = t.TypeOf<typeof TPersistedState>
 
-type State = {
-    timer?: NodeJS.Timeout;
-} & PersistedState
-
 class Task implements Base<Config, PersistedState> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    private readonly state: State;
+    public readonly state: PersistedState;
+    private timer?: NodeJS.Timeout;
 
     constructor(taskId: string, config: Config, restoreState?: PersistedState) {
         this.taskId = taskId;
@@ -50,8 +47,8 @@ class Task implements Base<Config, PersistedState> {
         this.state = restoreState || this.initialState();
     }
 
-    private initialState(): State {
-        const state: State = {
+    private initialState(): PersistedState {
+        const state: PersistedState = {
             iterationCount: 0,
             colours: [],
         };
@@ -68,24 +65,17 @@ class Task implements Base<Config, PersistedState> {
     }
 
     public startTask() {
-        this.state.timer ||= setInterval(
+        this.timer ||= setInterval(
             () => this.tick(),
             this.config.intervalSeconds * 1000,
         );
     }
 
     public stopTask() {
-        if (this.state.timer) {
-            clearInterval(this.state.timer);
-            this.state.timer = undefined;
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = undefined;
         }
-    }
-
-    public persistedState() {
-        return {
-            colours: this.state.colours,
-            iterationCount: this.state.iterationCount,
-        };
     }
 
     private tick() {

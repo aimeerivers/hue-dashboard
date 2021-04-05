@@ -95,7 +95,7 @@ const saveAll = () => {
     for (const task of backgroundTasks.values()) {
         data[task.taskId] = {
             config: task.config,
-            state: task.persistedState(),
+            state: task.state,
         };
     }
 

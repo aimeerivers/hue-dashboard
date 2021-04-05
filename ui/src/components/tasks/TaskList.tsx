@@ -13,12 +13,22 @@ type Task = {
     name: string;
 }
 
+const compareTasks = (a: Task, b: Task) => {
+    let r = a.name.localeCompare(b.name);
+    if (r === 0) r = a.id.localeCompare(b.id);
+    return r;
+};
+
 export default (props: Props) => {
     const [data, setData] = useState<Task[]>();
 
     const readData = () => {
         fetch(url)
-            .then(response => response.json().then(setData));
+            .then(response =>
+                response.json()
+                    .then((list: Task[]) => list.sort(compareTasks))
+                    .then(setData)
+            )
     };
 
     const doEnable = (task: Task, enabled: boolean) => {

@@ -37,6 +37,7 @@ export const TIntervalSeconds = new t.Type<number, number, unknown>(
     (u): u is number => typeof u === "number" && !isNaN(u) && isFinite(u) && u >= 0.1 && u <= 60,
     (u, c) => {
         if (u === undefined) return t.success(1);
+
         if (typeof u === "number" && !isNaN(u) && isFinite(u) && u >= 0.1 && u <= 60) {
             return t.success(u);
         } else {
@@ -51,6 +52,7 @@ export const TPhaseDelaySeconds = new t.Type<number, number, unknown>(
     (u): u is number => typeof u === "number" && !isNaN(u) && isFinite(u) && u >= 0 && u <= 60,
     (u, c) => {
         if (u === undefined) return t.success(0);
+
         if (typeof u === "number" && !isNaN(u) && isFinite(u) && u >= 0 && u <= 60) {
             return t.success(u);
         } else {
@@ -65,6 +67,8 @@ export const TIterations = new t.Type<number | null>(
     (u): u is (number | null) => typeof u === "number" || u === null || u === undefined,
     (u, c) => {
         if (u === null) return t.success(null);
+        if (u === undefined) return t.success(null);
+
         if (typeof u === "number" && !isNaN(u) && isFinite(u) && u > 0) {
             return t.success(Math.floor(u));
         } else {

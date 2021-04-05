@@ -9,7 +9,7 @@ const TConfig = t.intersection([
     t.type({
         type: t.literal(TYPE),
     }),
-]);
+], "NoopConfig");
 
 type Config = t.TypeOf<typeof TConfig>
 

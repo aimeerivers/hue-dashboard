@@ -47,3 +47,5 @@ export type TaskSpec<T extends string, C extends BaseConfig & { type: T; }, S> =
     TState: t.Type<S>;
     Task: BaseConstructor<C, S>;
 }
+
+export type Task = Base<BaseConfig, any>

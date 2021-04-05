@@ -1,11 +1,12 @@
 import fs from "fs";
-import {isLeft} from "fp-ts/Either";
+import {Either, isLeft, right} from "fp-ts/Either";
 
-import {Base, BaseConfig, TaskSpec} from "./tasks/base";
+import {Base, Task, TaskSpec} from "./tasks/base";
 import Noop from './tasks/noop';
 import Cycle from './tasks/cycle';
 import RandomSame from './tasks/random_same';
 import RandomDifferent from './tasks/random_different';
+import {validator} from "io-ts-validator";
 
 export const specs: TaskSpec<string, any, any>[] = [
     Noop,
@@ -25,41 +26,37 @@ export const specs: TaskSpec<string, any, any>[] = [
 
 let nextId = 0;
 
-const backgroundTasks: Map<string, Base<BaseConfig, any>> = new Map();
+const backgroundTasks: Map<string, Task> = new Map();
 
-export const getBackgroundTasks = ():Map<string, any> => {
-    const map = new Map<string, any>();
+export const getBackgroundTasks = () => backgroundTasks;
 
-    for (const task of backgroundTasks.values()) {
-        map.set(task.taskId, task.config);
-    }
+export const putBackgroundTask = (config: any): Either<string[], Task> | null => {
+    const maybeTask = createTask(config);
+    if (!maybeTask) return null;
+    if (isLeft(maybeTask)) return maybeTask;
 
-    return map;
-};
-
-export const putBackgroundTask = (config: any): string | null => {
-    const task = createTask(config);
-    if (!task) return null;
-
+    const task = maybeTask.right;
     backgroundTasks.set(task.taskId, task);
     if (task.config.enabled) task.start();
     saveAll();
-    return task.taskId;
+    return right(task);
 };
 
-const createTask = (config: any): Base<BaseConfig, any> | undefined => {
-    if (typeof config !== "object") return;
+const createTask = (config: any): Either<string[], Task> | undefined => {
+    if (typeof config !== "object") return undefined;
 
-    const type = config.type;
+    const type = config?.type;
 
     for (const spec of specs) {
         if (type === spec.TYPE) {
-            const maybe = spec.TConfig.decode(config);
-            if (isLeft(maybe)) return;
+            const maybe = validator(spec.TConfig).decodeEither(config);
+            if (isLeft(maybe)) return maybe;
 
-            return new spec.Task(getTaskId(), maybe.right);
+            return right(new spec.Task(getTaskId(), maybe.right));
         }
     }
+
+    return undefined;
 };
 
 const getTaskId = (): string => {
@@ -74,7 +71,7 @@ const getTaskId = (): string => {
     return taskId;
 };
 
-export const setTaskEnabled = (taskId: string, enabled: boolean): any | undefined => {
+export const setTaskEnabled = (taskId: string, enabled: boolean): Task | undefined => {
     const task = backgroundTasks.get(taskId);
     if (!task) return;
 
@@ -84,7 +81,7 @@ export const setTaskEnabled = (taskId: string, enabled: boolean): any | undefine
     if (enabled) task.start();
     else task.stop();
 
-    return task.config;
+    return task;
 };
 
 export const deleteBackgroundTask = (taskId: string) => {

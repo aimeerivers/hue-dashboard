@@ -23,7 +23,7 @@ const TConfig = t.intersection([
         intervalSeconds: TIntervalSeconds,
         maxIterations: TIterations,
     }),
-]);
+], "CycleConfig");
 
 type Config = t.TypeOf<typeof TConfig>
 

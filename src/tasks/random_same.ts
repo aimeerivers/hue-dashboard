@@ -21,7 +21,7 @@ const TConfig = t.intersection([
         phaseDelaySeconds: TPhaseDelaySeconds,
         maxIterations: TIterations,
     }),
-]);
+], "RandomSameConfig");
 
 type Config = t.TypeOf<typeof TConfig>
 

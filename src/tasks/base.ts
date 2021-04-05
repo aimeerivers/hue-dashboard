@@ -37,8 +37,8 @@ export interface Base<C extends BaseConfig, S> {
     readonly taskId: string;
     readonly config: C;
     readonly state: S;
-    startTask(): void;
-    stopTask(): void;
+    start(): void;
+    stop(): void;
 }
 
 export type TaskSpec<T extends string, C extends BaseConfig & { type: T; }, S> = {

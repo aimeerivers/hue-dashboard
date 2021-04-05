@@ -29,10 +29,10 @@ class Task implements Base<Config, State> {
         this.state = state || {};
     }
 
-    public startTask() {
+    public start() {
     }
 
-    public stopTask() {
+    public stop() {
     }
 
 }

@@ -33,7 +33,7 @@ export const putBackgroundTask = (config: any): string | null => {
     if (!task) return null;
 
     backgroundTasks.set(task.taskId, task);
-    if (task.config.enabled) task.startTask();
+    if (task.config.enabled) task.start();
     saveAll();
     return task.taskId;
 };
@@ -72,8 +72,8 @@ export const setTaskEnabled = (taskId: string, enabled: boolean): any | undefine
     task.config.enabled = enabled;
     saveAll();
 
-    if (enabled) task.startTask();
-    else task.stopTask();
+    if (enabled) task.start();
+    else task.stop();
 
     return task.config;
 };
@@ -82,7 +82,7 @@ export const deleteBackgroundTask = (taskId: string) => {
     const task = backgroundTasks.get(taskId);
     if (!task) return;
 
-    task.stopTask();
+    task.stop();
     backgroundTasks.delete(taskId);
     saveAll();
 };
@@ -125,7 +125,7 @@ const restoreAll = () => {
         const task = tryRestore(taskId, configAndState.config, configAndState.state);
         if (task) {
             backgroundTasks.set(task.taskId, task);
-            if (task.config.enabled) task.startTask();
+            if (task.config.enabled) task.start();
         }
     }
 };

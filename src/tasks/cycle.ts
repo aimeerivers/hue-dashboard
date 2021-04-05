@@ -64,14 +64,14 @@ class Task implements Base<Config, State> {
         return state;
     }
 
-    public startTask() {
+    public start() {
         this.timer ||= setInterval(
             () => this.tick(),
             this.config.intervalSeconds * 1000,
         );
     }
 
-    public stopTask() {
+    public stop() {
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = undefined;

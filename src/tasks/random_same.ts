@@ -54,14 +54,14 @@ class Task implements Base<Config, State> {
         };
     }
 
-    public startTask() {
+    public start() {
         this.timer ||= setTimeout(
             () => this.tick(),
             0,
         );
     }
 
-    public stopTask() {
+    public stop() {
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = undefined;

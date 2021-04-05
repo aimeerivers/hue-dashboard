@@ -1,30 +1,31 @@
-import {Base, BaseConfig, BaseFactory} from "./base";
-import {validateBaseConfig} from "./common";
+import * as t from "io-ts";
+import {isLeft} from "fp-ts/Either";
+
+import {Base, BaseFactory, TBaseConfig} from "./base";
 
 const TYPE = "noop";
 
-export type Config = BaseConfig & {
-    type: typeof TYPE;
-};
+export const TConfig = t.intersection([
+    TBaseConfig,
+    t.type({
+        type: t.literal(TYPE),
+    }),
+]);
 
-export type State = {
-}
+export type Config = t.TypeOf<typeof TConfig>
+
+export type State = Record<string, never>
 
 export class Builder extends BaseFactory<Config, Task> {
 
     validate(config: any) {
-        if (config.type !== TYPE) return;
+        const maybeConfig = TConfig.decode(config);
+        if (isLeft(maybeConfig)) return;
 
-        const base = validateBaseConfig(config);
-        if (!base) return;
-
-        const typedConfig: Config = {
-            ...base,
-            type: TYPE,
-        };
+        const c = maybeConfig.right;
 
         return {
-            build: (taskId: string, _state?: any) => new Task(taskId, typedConfig),
+            build: (taskId: string, _state?: any) => new Task(taskId, c),
         };
     }
 
@@ -34,18 +35,11 @@ export class Task extends Base<Config> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    private readonly state: State;
 
     constructor(taskId: string, config: Config) {
         super(taskId);
 
         this.config = config;
-        const state = this.initialState();
-        this.state = state;
-    }
-
-    private initialState(): State {
-        return {};
     }
 
     public startTask() {

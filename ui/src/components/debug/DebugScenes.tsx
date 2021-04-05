@@ -7,10 +7,7 @@ export default () => {
     const [data, setData] = useState<any>();
 
     const readData = () => {
-        fetch(url)
-            .then(response => {
-                const data = response.json().then(setData);
-            });
+        fetch(url).then(response => response.json().then(setData));
     };
 
     useEffect(() => {

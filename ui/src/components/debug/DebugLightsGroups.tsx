@@ -17,14 +17,8 @@ export default () => {
     const [groupsData, setGroupsData] = useState<any>();
 
     const readData = () => {
-        fetch("/proxy/lights")
-            .then(response => {
-                response.json().then(setLightsData);
-            });
-        fetch("/proxy/groups")
-            .then(response => {
-                response.json().then(setGroupsData);
-            });
+        fetch("/proxy/lights").then(response => response.json().then(setLightsData));
+        fetch("/proxy/groups").then(response => response.json().then(setGroupsData));
     };
 
     useEffect(() => {

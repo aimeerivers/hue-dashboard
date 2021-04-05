@@ -1,45 +1,35 @@
 import * as t from "io-ts";
-import {isLeft} from "fp-ts/Either";
 
-import {Base, BaseFactory, TBaseConfig} from "./base";
+import {Base, TBaseConfig} from "./base";
 
 const TYPE = "noop";
 
-export const TConfig = t.intersection([
+const TConfig = t.intersection([
     TBaseConfig,
     t.type({
         type: t.literal(TYPE),
     }),
 ]);
 
-export type Config = t.TypeOf<typeof TConfig>
+type Config = t.TypeOf<typeof TConfig>
 
-export type State = Record<string, never>
+const TPersistedState = t.type({
+});
 
-export class Builder extends BaseFactory<Config, Task> {
+type PersistedState = t.TypeOf<typeof TPersistedState>
 
-    validate(config: any) {
-        const maybeConfig = TConfig.decode(config);
-        if (isLeft(maybeConfig)) return;
+type State = PersistedState
 
-        const c = maybeConfig.right;
-
-        return {
-            build: (taskId: string, _state?: any) => new Task(taskId, c),
-        };
-    }
-
-}
-
-export class Task extends Base<Config> {
+class Task implements Base<Config, PersistedState> {
 
     public readonly taskId: string;
     public readonly config: Config;
+    private readonly state: State;
 
-    constructor(taskId: string, config: Config) {
-        super(taskId);
-
+    constructor(taskId: string, config: Config, persistedState?: PersistedState) {
+        this.taskId = taskId;
         this.config = config;
+        this.state = persistedState || {};
     }
 
     public startTask() {
@@ -48,8 +38,15 @@ export class Task extends Base<Config> {
     public stopTask() {
     }
 
-    public save() {
-        return null;
+    public persistedState() {
+        return {};
     }
 
+}
+
+export default {
+    TYPE,
+    TConfig,
+    TPersistedState,
+    Task,
 }

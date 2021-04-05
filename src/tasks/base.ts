@@ -29,21 +29,21 @@ export const TBaseConfig = t.type({
 
 export type BaseConfig = t.TypeOf<typeof TBaseConfig>
 
-export abstract class Base<C extends BaseConfig> {
-    public readonly taskId: string;
-    public readonly config: C;
-
-    constructor(taskId: string) {
-        this.taskId = taskId;
-    }
-
-    public abstract startTask(): void;
-    public abstract stopTask(): void;
-    public abstract save(): any;
+export interface BaseConstructor<C extends BaseConfig, PS> {
+    new (taskId: string, config: C, persistedState?: PS): Base<C, PS>;
 }
 
-export abstract class BaseFactory<C extends BaseConfig, T extends Base<C>> {
-    abstract validate(config: any): {
-        build: (taskId: string, state?: any) => T;
-    } | undefined;
+export interface Base<C extends BaseConfig, PS> {
+    readonly taskId: string;
+    readonly config: C;
+    startTask(): void;
+    stopTask(): void;
+    persistedState(): PS;
+}
+
+export type TaskSpec<T extends string, C extends BaseConfig & { type: T; }, S> = {
+    TYPE: T;
+    TConfig: t.Type<C>;
+    TPersistedState: t.Type<S>;
+    Task: BaseConstructor<C, S>;
 }

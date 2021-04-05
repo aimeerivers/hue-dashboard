@@ -1,21 +1,22 @@
 import fs from "fs";
+import {isLeft} from "fp-ts/Either";
 
-import {Base, BaseConfig} from "./tasks/base";
-import * as Cycle from './tasks/cycle';
-import * as Noop from './tasks/noop';
-import * as RandomDifferent from './tasks/random_different';
-import * as RandomSame from './tasks/random_same';
+import {Base, BaseConfig, TaskSpec} from "./tasks/base";
+import Noop from './tasks/noop';
+import Cycle from './tasks/cycle';
+import RandomSame from './tasks/random_same';
+import RandomDifferent from './tasks/random_different';
 
-export const handlers = [
-    new Noop.Builder(),
-    new Cycle.Builder(),
-    new RandomSame.Builder(),
-    new RandomDifferent.Builder(),
+export const specs: TaskSpec<string, any, any>[] = [
+    Noop,
+    Cycle,
+    RandomSame,
+    RandomDifferent,
 ];
 
 let nextId = 0;
 
-const backgroundTasks: Map<string, Base<BaseConfig>> = new Map();
+const backgroundTasks: Map<string, Base<BaseConfig, any>> = new Map();
 
 export const getBackgroundTasks = ():Map<string, any> => {
     const map = new Map<string, any>();
@@ -37,11 +38,18 @@ export const putBackgroundTask = (config: any): string | null => {
     return task.taskId;
 };
 
-const createTask = (config: any): Base<BaseConfig> | undefined => {
-    for (const handler of handlers) {
-        const validated = handler.validate(config);
+const createTask = (config: any): Base<BaseConfig, any> | undefined => {
+    if (typeof config !== "object") return;
 
-        if (validated) return validated.build(getTaskId());
+    const type = config.type;
+
+    for (const spec of specs) {
+        if (type === spec.TYPE) {
+            const maybe = spec.TConfig.decode(config);
+            if (isLeft(maybe)) return;
+
+            return new spec.Task(getTaskId(), maybe.right);
+        }
     }
 };
 
@@ -87,7 +95,7 @@ const saveAll = () => {
     for (const task of backgroundTasks.values()) {
         data[task.taskId] = {
             config: task.config,
-            state: task.save(),
+            state: task.persistedState(),
         };
     }
 
@@ -109,7 +117,12 @@ const restoreAll = () => {
     if (data === undefined) return;
 
     for (const taskId of Object.keys(data)) {
-        const task = tryRestore(taskId, data[taskId].config, data[taskId].state);
+        if (backgroundTasks.has(taskId)) continue;
+
+        const configAndState = data[taskId];
+        if (typeof configAndState !== "object") continue;
+
+        const task = tryRestore(taskId, configAndState.config, configAndState.state);
         if (task) {
             backgroundTasks.set(task.taskId, task);
             if (task.config.enabled) task.startTask();
@@ -117,16 +130,26 @@ const restoreAll = () => {
     }
 };
 
-const tryRestore = (taskId: string, config: any, state: any): Base<any> | undefined => {
-    if (backgroundTasks.has(taskId)) return;
+const tryRestore = (taskId: string, config: any, state: any): Base<any, any> | undefined => {
+    for (const spec of specs) {
+        if (spec.TYPE === config.type) {
+            const maybeConfig = spec.TConfig.decode(config);
+            const maybeState = spec.TPersistedState.decode(state);
 
-    for (const handler of handlers) {
-        const validated = handler.validate(config);
+            if (isLeft(maybeConfig)) {
+                console.error(`Failed to restore task ${taskId}`);
+                console.debug(JSON.stringify(maybeConfig.left));
+                return;
+            }
 
-        if (validated) return validated.build(taskId, state);
+            if (isLeft(maybeState)) {
+                console.warn(`Failed to restore state of task ${taskId} - initial state will be used`);
+                return new spec.Task(taskId, maybeConfig.right);
+            } else {
+                return new spec.Task(taskId, maybeConfig.right, maybeState.right);
+            }
+        }
     }
-
-    return undefined;
 };
 
 // TODO: maybe a mechanism for periodic saving

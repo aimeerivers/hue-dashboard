@@ -1,18 +1,17 @@
 import * as t from "io-ts";
-import {isLeft} from "fp-ts/Either";
 
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
     TIntervalSeconds, TIterations, TLightGroupIds, TPhaseDelaySeconds, TTransitionTimeSeconds
 } from "./codec";
-import {Base, BaseFactory, TBaseConfig} from "./base";
+import {Base, TBaseConfig} from "./base";
 import {randomXY} from "./colour_tools";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "random-different";
 
-export const TConfig = t.intersection([
+const TConfig = t.intersection([
     TBaseConfig,
     t.type({
         type: t.literal(TYPE),
@@ -24,63 +23,36 @@ export const TConfig = t.intersection([
     }),
 ]);
 
-export type Config = t.TypeOf<typeof TConfig>
+type Config = t.TypeOf<typeof TConfig>
 
 const TPersistedState = t.type({
     nextGroupIndex: t.number, // weak
     iterationCount: t.number, // weak
 });
 
-export type State = {
+type PersistedState = t.TypeOf<typeof TPersistedState>
+
+type State = {
     timer?: NodeJS.Timeout;
-} & t.TypeOf<typeof TPersistedState>
+} & PersistedState
 
-export class Builder extends BaseFactory<Config, Task> {
-
-    validate(config: any) {
-        const maybeConfig = TConfig.decode(config);
-        if (isLeft(maybeConfig)) return;
-
-        const c = maybeConfig.right;
-
-        return {
-            build: (taskId: string, state?: any) => new Task(taskId, c, state)
-        };
-    }
-
-    build(taskId: string, config: Config): Task {
-        return new Task(taskId, config);
-    }
-
-}
-
-export class Task extends Base<Config> {
+class Task implements Base<Config, PersistedState> {
 
     public readonly taskId: string;
     public readonly config: Config;
     private readonly state: State;
 
-    constructor(taskId: string, config: Config, restoreState?: any) {
-        super(taskId);
-
+    constructor(taskId: string, config: Config, restoreState?: PersistedState) {
+        this.taskId = taskId;
         this.config = config;
-        let state: State | undefined;
-        if (restoreState) state = this.restoreState(restoreState);
-        this.state = state || this.initialState();
+        this.state = restoreState || this.initialState();
     }
 
-    private initialState(): State {
+    private initialState() {
         return {
             nextGroupIndex: 0,
             iterationCount: 0,
         };
-    }
-
-    private restoreState(restore: any): State | undefined {
-        const maybeState = TPersistedState.decode(restore);
-        if (isLeft(maybeState)) return;
-
-        return maybeState.right;
     }
 
     public startTask() {
@@ -97,9 +69,10 @@ export class Task extends Base<Config> {
         }
     }
 
-    public save() {
+    public persistedState() {
         return {
             iterationCount: this.state.iterationCount,
+            nextGroupIndex: this.state.nextGroupIndex,
         };
     }
 
@@ -143,4 +116,11 @@ export class Task extends Base<Config> {
         }
     }
 
+}
+
+export default {
+    TYPE,
+    TConfig,
+    TPersistedState,
+    Task,
 }

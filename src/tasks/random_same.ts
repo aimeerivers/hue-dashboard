@@ -4,9 +4,9 @@ import {isLeft} from "fp-ts/Either";
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
-    TBaseConfig, TIntervalSeconds, TIterations, TLightGroupIds, TPhaseDelaySeconds, TTransitionTimeSeconds, TXY
-} from "./common";
-import {Base, BaseFactory} from "./base";
+    TIntervalSeconds, TIterations, TLightGroupIds, TPhaseDelaySeconds, TTransitionTimeSeconds, TXY
+} from "./codec";
+import {Base, BaseFactory, TBaseConfig} from "./base";
 import {randomXY} from "./colour_tools";
 import {deleteBackgroundTask} from "../background";
 

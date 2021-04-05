@@ -4,14 +4,13 @@ import {isLeft} from "fp-ts/Either";
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
-    TBaseConfig,
     TIntervalSeconds,
     TIterations,
     TLightIds,
     TTransitionTimeSeconds,
     TXY
-} from "./common";
-import {Base, BaseFactory} from "./base";
+} from "./codec";
+import {Base, BaseFactory, TBaseConfig} from "./base";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "cycle";

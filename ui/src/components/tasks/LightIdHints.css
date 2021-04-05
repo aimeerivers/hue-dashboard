@@ -1,0 +1,26 @@
+.List {
+    display: flex;
+    flex-direction: column;
+}
+
+.LightItemSingle {
+    font-size: smaller;
+    background: #dddddd;
+    border: 1px solid #bbbbbb;
+    padding: 0.1em;
+    margin-bottom: 0.2em;
+}
+
+.LightItemGroup {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 0.2em;
+}
+
+.LightItemGroupItem {
+    font-size: smaller;
+    background: #dddddd;
+    border: 1px solid #bbbbbb;
+    margin-right: 0.5em;
+    padding: 0.1em;
+}

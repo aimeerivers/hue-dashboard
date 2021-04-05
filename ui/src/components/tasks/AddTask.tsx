@@ -2,6 +2,7 @@ import * as React from 'react';
 import {Field, Label, Input, Checkbox, Radio, Range, Hint, Message} from '@zendeskgarden/react-forms';
 import {Button} from "@zendeskgarden/react-buttons";
 import {ChangeEvent, useState} from "react";
+import LightIdHints from "./LightIdHints";
 
 type Props = {
     onDone: () => void;
@@ -37,6 +38,7 @@ export default (props: Props) => {
 
     const lightIds = lightIdsText
         .split(/\s+/)
+        .filter(t => t !== "")
         .map(t => t.split('+'))
         .map((idOrGroup: string[]) => idOrGroup.length === 1 ? idOrGroup[0] : idOrGroup);
 
@@ -140,6 +142,7 @@ export default (props: Props) => {
         <Field>
             <Label>Enter the light IDs to control (ugh)</Label>
             <Input value={lightIdsText} onChange={(e: ChangeEvent<HTMLInputElement>) => setLightIdsText(e.target.value)}/>
+            {lightIds.length > 0 && <Hint><LightIdHints lightIds={lightIds}/></Hint>}
         </Field>
 
         <br/>

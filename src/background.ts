@@ -14,6 +14,15 @@ export const specs: TaskSpec<string, any, any>[] = [
     RandomDifferent,
 ];
 
+(() => {
+    const seenTypes = new Set<string>();
+    for (const spec of specs) {
+        if (seenTypes.has(spec.TYPE)) throw `Duplicate task type '${spec.TYPE}'`;
+
+        seenTypes.add(spec.TYPE);
+    }
+})();
+
 let nextId = 0;
 
 const backgroundTasks: Map<string, Base<BaseConfig, any>> = new Map();

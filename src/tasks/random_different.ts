@@ -1,129 +1,69 @@
+import * as t from "io-ts";
+
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
-    validateBaseConfig,
-    validateIntervalSeconds,
-    validateIterations,
-    validateLightGroupIds,
-    validateTransitionTimeSeconds
-} from "./common";
-import {Base, BaseConfig, BaseFactory} from "./base";
+    TIntervalSeconds, TIterations, TLightGroupIds, TPhaseDelaySeconds, TTransitionTimeSeconds
+} from "./codec";
+import {Base, TBaseConfig} from "./base";
 import {randomXY} from "./colour_tools";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "random-different";
 
-export type Config = BaseConfig & {
-    type: typeof TYPE;
-    lightIds: (string | string[])[];
-    transitionTimeSeconds: number;
-    intervalSeconds: number;
-    phaseDelaySeconds?: number;
-    maxIterations: number | null;
-};
+const TConfig = t.intersection([
+    TBaseConfig,
+    t.type({
+        type: t.literal(TYPE),
+        lightIds: TLightGroupIds,
+        transitionTimeSeconds: TTransitionTimeSeconds,
+        intervalSeconds: TIntervalSeconds,
+        phaseDelaySeconds: TPhaseDelaySeconds,
+        maxIterations: TIterations,
+    }),
+], "RandomDifferentConfig");
 
-export type State = {
-    timer?: NodeJS.Timeout;
-    nextGroupIndex: number;
-    iterationCount: number;
-}
+type Config = t.TypeOf<typeof TConfig>
 
-export class Builder extends BaseFactory<Config, Task> {
+const TState = t.type({
+    nextGroupIndex: t.number, // weak
+    iterationCount: t.number, // weak
+});
 
-    validate(config: any) {
-        if (config.type !== TYPE) return;
+type State = t.TypeOf<typeof TState>
 
-        const base = validateBaseConfig(config);
-        if (!base) return;
-
-        const lightIds = validateLightGroupIds(config.lightIds);
-        if (!lightIds) return;
-
-        const transitionTimeSeconds = validateTransitionTimeSeconds(config.transitionTimeSeconds);
-        if (transitionTimeSeconds === undefined) return;
-
-        const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
-        if (intervalSeconds === undefined) return;
-
-        const phaseDelaySeconds = validateIntervalSeconds(config.phaseDelaySeconds);
-
-        const maxIterations = validateIterations(config.maxIterations);
-        if (maxIterations === undefined) return;
-
-        const c: Config = {
-            ...base,
-            type: TYPE,
-            lightIds,
-            transitionTimeSeconds,
-            intervalSeconds,
-            phaseDelaySeconds,
-            maxIterations,
-        };
-
-        return {
-            build: (taskId: string, state?: any) => new Task(taskId, c, state)
-        };
-    }
-
-    build(taskId: string, config: Config): Task {
-        return new Task(taskId, config);
-    }
-
-}
-
-export class Task extends Base<Config> {
+class Task implements Base<Config, State> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    private readonly state: State;
+    public readonly state: State;
+    private timer?: NodeJS.Timeout;
 
-    constructor(taskId: string, config: Config, restoreState?: any) {
-        super(taskId);
-
+    constructor(taskId: string, config: Config, restoreState?: State) {
+        this.taskId = taskId;
         this.config = config;
-        let state: State | undefined;
-        if (restoreState) state = this.restoreState(restoreState);
-        this.state = state || this.initialState();
+        this.state = restoreState || this.initialState();
     }
 
-    private initialState(): State {
+    private initialState() {
         return {
             nextGroupIndex: 0,
             iterationCount: 0,
         };
     }
 
-    private restoreState(restore: any): State | undefined {
-        const iterationCount = validateIterations(restore.iterationCount);
-        if (iterationCount === undefined || iterationCount === null) return;
-
-        const nextGroupIndex = restore.nextGroupIndex;
-        if (typeof nextGroupIndex !== 'number') return;
-
-        return {
-            nextGroupIndex,
-            iterationCount,
-        };
-    }
-
-    public startTask() {
-        this.state.timer ||= setTimeout(
+    public start() {
+        this.timer ||= setTimeout(
             () => this.tick(),
             0,
         );
     }
 
-    public stopTask() {
-        if (this.state.timer) {
-            clearTimeout(this.state.timer);
-            this.state.timer = undefined;
+    public stop() {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = undefined;
         }
-    }
-
-    public save() {
-        return {
-            iterationCount: this.state.iterationCount,
-        };
     }
 
     private tick() {
@@ -149,7 +89,7 @@ export class Task extends Base<Config> {
         ).catch(e => console.log({ task: "failed", taskId, e }));
 
         if (state.nextGroupIndex === 0) {
-            state.timer = setTimeout(
+            this.timer = setTimeout(
                 () => this.tick(),
                 config.intervalSeconds * 1000,
             );
@@ -159,11 +99,18 @@ export class Task extends Base<Config> {
                 deleteBackgroundTask(this.taskId);
             }
         } else {
-            state.timer = setTimeout(
+            this.timer = setTimeout(
                 () => this.tick(),
                 (config.phaseDelaySeconds || 0) * 1000,
             );
         }
     }
 
+}
+
+export default {
+    TYPE,
+    TConfig,
+    TState,
+    Task,
 }

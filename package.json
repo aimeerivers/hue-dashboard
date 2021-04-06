@@ -15,6 +15,9 @@
     "canvas": "latest",
     "cors": "latest",
     "express": "latest",
+    "fp-ts": "^2.9.5",
+    "io-ts": "^2.2.16",
+    "io-ts-validator": "^0.0.5",
     "pug": "latest"
   },
   "devDependencies": {

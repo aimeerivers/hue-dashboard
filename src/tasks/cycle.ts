@@ -1,89 +1,56 @@
+import * as t from "io-ts";
+
 import * as HueAPI from "../hue_api";
 import {TRANSITION_TIME_UNITS_PER_SECOND} from "../hue_api";
 import {
-    validateBaseConfig,
-    validateIntervalSeconds,
-    validateIterations,
-    validateLightIds,
-    validateTransitionTimeSeconds
-} from "./common";
-import {Base, BaseConfig, BaseFactory} from "./base";
+    TIntervalSeconds,
+    TIterations,
+    TLightIds,
+    TTransitionTimeSeconds,
+    TXY
+} from "./codec";
+import {Base, TBaseConfig} from "./base";
 import {deleteBackgroundTask} from "../background";
 
 const TYPE = "cycle";
 
-export type Config = BaseConfig & {
-    type: typeof TYPE;
-    lightIds: string[];
-    transitionTimeSeconds: number;
-    intervalSeconds: number;
-    maxIterations: number | null;
-};
+const TConfig = t.intersection([
+    TBaseConfig,
+    t.type({
+        type: t.literal(TYPE),
+        lightIds: TLightIds,
+        transitionTimeSeconds: TTransitionTimeSeconds,
+        intervalSeconds: TIntervalSeconds,
+        maxIterations: TIterations,
+    }),
+], "CycleConfig");
 
-export type State = {
-    timer?: NodeJS.Timeout;
-    iterationCount: number;
-    colours?: { xy: [number, number] }[];
-}
+type Config = t.TypeOf<typeof TConfig>
 
-export class Builder extends BaseFactory<Config, Task> {
+const TState = t.type({
+    iterationCount: t.number, // weak
+    colours: t.array(t.type({ xy: TXY })),
+});
 
-    validate(config: any) {
-        if (config.type !== TYPE) return;
+type State = t.TypeOf<typeof TState>
 
-        const base = validateBaseConfig(config);
-        if (!base) return;
-
-        const lightIds = validateLightIds(config.lightIds);
-        if (!lightIds) return;
-
-        const transitionTimeSeconds = validateTransitionTimeSeconds(config.transitionTimeSeconds);
-        if (transitionTimeSeconds === undefined) return;
-
-        const intervalSeconds = validateIntervalSeconds(config.intervalSeconds);
-        if (intervalSeconds === undefined) return;
-
-        const maxIterations = validateIterations(config.maxIterations);
-        if (maxIterations === undefined) return;
-
-        const c: Config = {
-            ...base,
-            type: TYPE,
-            lightIds,
-            transitionTimeSeconds,
-            intervalSeconds,
-            maxIterations,
-        };
-
-        return {
-            build: (taskId: string, state?: any) => new Task(taskId, c, state)
-        };
-    }
-
-    build(taskId: string, config: Config): Task {
-        return new Task(taskId, config);
-    }
-
-}
-
-export class Task extends Base<Config> {
+class Task implements Base<Config, State> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    private readonly state: State;
+    public readonly state: State;
+    private timer?: NodeJS.Timeout;
 
-    constructor(taskId: string, config: Config, restoreState?: any) {
-        super(taskId);
-
+    constructor(taskId: string, config: Config, restoreState?: State) {
+        this.taskId = taskId;
         this.config = config;
-        let state: State | undefined;
-        if (restoreState) state = this.restoreState(restoreState);
-        this.state = state || this.initialState();
+        this.state = restoreState || this.initialState();
     }
 
     private initialState(): State {
         const state: State = {
             iterationCount: 0,
+            colours: [],
         };
 
         HueAPI.getLights().then(lights => {
@@ -97,38 +64,18 @@ export class Task extends Base<Config> {
         return state;
     }
 
-    private restoreState(restore: any): State | undefined {
-        if (!Array.isArray(restore.colours)) return;
-        if (restore.colours.length !== this.config.lightIds.length) return;
-
-        const iterationCount = validateIterations(restore.iterationCount);
-        if (iterationCount === undefined || iterationCount === null) return;
-
-        return {
-            iterationCount,
-            colours: restore.colours,
-        };
-    }
-
-    public startTask() {
-        this.state.timer ||= setInterval(
+    public start() {
+        this.timer ||= setInterval(
             () => this.tick(),
             this.config.intervalSeconds * 1000,
         );
     }
 
-    public stopTask() {
-        if (this.state.timer) {
-            clearInterval(this.state.timer);
-            this.state.timer = undefined;
+    public stop() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = undefined;
         }
-    }
-
-    public save() {
-        return {
-        iterationCount: this.state.iterationCount,
-            colours: this.state.colours,
-        };
     }
 
     private tick() {
@@ -137,7 +84,7 @@ export class Task extends Base<Config> {
         const state = this.state;
 
         const colours = state.colours;
-        if (!colours) return;
+        if (colours.length === 0) return;
 
         const colour = colours.shift();
         if (!colour) return;
@@ -161,4 +108,11 @@ export class Task extends Base<Config> {
         }
     }
 
+}
+
+export default {
+    TYPE,
+    TConfig,
+    TState,
+    Task,
 }

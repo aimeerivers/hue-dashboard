@@ -1,61 +1,45 @@
-import {Base, BaseConfig, BaseFactory} from "./base";
-import {validateBaseConfig} from "./common";
+import * as t from "io-ts";
+
+import {Base, TBaseConfig} from "./base";
 
 const TYPE = "noop";
 
-export type Config = BaseConfig & {
-    type: typeof TYPE;
-};
+const TConfig = t.intersection([
+    TBaseConfig,
+    t.type({
+        type: t.literal(TYPE),
+    }),
+], "NoopConfig");
 
-export type State = {
-}
+type Config = t.TypeOf<typeof TConfig>
 
-export class Builder extends BaseFactory<Config, Task> {
+const TState = t.type({});
 
-    validate(config: any) {
-        if (config.type !== TYPE) return;
+type State = t.TypeOf<typeof TState>
 
-        const base = validateBaseConfig(config);
-        if (!base) return;
-
-        const typedConfig: Config = {
-            ...base,
-            type: TYPE,
-        };
-
-        return {
-            build: (taskId: string, _state?: any) => new Task(taskId, typedConfig),
-        };
-    }
-
-}
-
-export class Task extends Base<Config> {
+class Task implements Base<Config, State> {
 
     public readonly taskId: string;
     public readonly config: Config;
-    private readonly state: State;
+    public readonly state: State;
 
-    constructor(taskId: string, config: Config) {
-        super(taskId);
-
+    constructor(taskId: string, config: Config, state?: State) {
+        this.taskId = taskId;
         this.config = config;
-        const state = this.initialState();
-        this.state = state;
+        this.state = state || {};
     }
 
-    private initialState(): State {
-        return {};
+    public start() {
     }
 
-    public startTask() {
+    public stop() {
     }
 
-    public stopTask() {
-    }
+}
 
-    public save() {
-        return null;
-    }
-
+export default {
+    TYPE,
+    TConfig,
+    TState,
+    Task,
 }

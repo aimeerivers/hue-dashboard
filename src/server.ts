@@ -117,7 +117,7 @@ app.put('/room/:roomId/brightness/:brightness', (req, res) =>
 );
 
 app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
-  let transitionTimeSeconds = parseFloat(req.params.time);
+  let transitionTimeSeconds = parseFloat(req.params.time || '');
   if (isNaN(transitionTimeSeconds)) transitionTimeSeconds = TRANSITION_TIME_SECONDS_DEFAULT;
 
   const lightId = parseInt(req.params.lightId);

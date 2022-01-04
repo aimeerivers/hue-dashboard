@@ -137,7 +137,7 @@ app.post('/light/:lightId/rgb/:r/:g/:b/:time?', (req, res) => {
     .then(() => res.sendStatus(200));
 });
 
-app.put('/clock', (_req, res) => {
+app.put('/clock', (req, res) => {
   // if(req.body.years) { updateLight(13, req.body.years.rgb); }
   // if(req.body.months) { updateLight(12, req.body.months.rgb); }
   // if(req.body.days) { updateLight(11, req.body.days.rgb); }
@@ -152,6 +152,9 @@ app.put('/clock', (_req, res) => {
   // if(req.body.hours) { updateLight(13, req.body.hours.rgb); }
   // if(req.body.minutes) { updateLight(12, req.body.minutes.rgb); }
   // if(req.body.seconds) { updateLight(11, req.body.seconds.rgb); }
+
+  if(req.body.hours) { updateLight(17, req.body.hours.rgb); }
+  if(req.body.minutes) { updateLight(14, req.body.minutes.rgb); }
 
   res.sendStatus(200);
 });
@@ -175,15 +178,17 @@ app.get('/scene/:sceneId.png', (req, res) => {
     })
 });
 
-// function updateLight(id, value) {
-//   const parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
-//   const red = parse[1];
-//   const green = parse[2];
-//   const blue = parse[3];
-//   const xy = Conversions.rgbToXy(red, green, blue);
-//
-//   return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
-// }
+function updateLight(id: number, value: string) {
+  const parse = /rgb\((\d+), (\d+), (\d+)\)/i.exec(value);
+  if(parse) {
+    const red = parseInt(parse[1]);
+    const green = parseInt(parse[2]);
+    const blue = parseInt(parse[3]);
+    const xy = Conversions.rgbToXy(red, green, blue);
+
+    return HueAPI.request('PUT', `/lights/${id}/state`, {"xy": xy});
+  }
+}
 
 BackgroundRoutes.addTo(app);
 ProxyRoutes.addTo(app);
